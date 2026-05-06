@@ -1,0 +1,39 @@
+{
+  "_instrucoes": {
+    "usuarios": "Adicione/remova usuários na lista 'users'. Permissões: Administrador, Usuario, Portaria",
+    "unidades": "Cada unidade precisa de 'nome'. Os campos 'lat' e 'lng' são opcionais (usados no mapa)",
+    "senha": "Troque as senhas padrão antes de publicar o site"
+  },
+  "users": [
+    {
+      "email": "admin@empresa.com",
+      "senha": "admin123",
+      "permissao": "Administrador",
+      "unidades": []
+    },
+    {
+      "email": "supervisor@empresa.com",
+      "senha": "super123",
+      "permissao": "Usuario",
+      "unidades": []
+    },
+    {
+      "email": "portaria@empresa.com",
+      "senha": "portaria123",
+      "permissao": "Portaria",
+      "unidades": []
+    }
+  ],
+  "unidades": [
+    {
+      "nome": "CD São Paulo",
+      "lat": "-23.5505",
+      "lng": "-46.6333"
+    },
+    {
+      "nome": "CD Cajamar",
+      "lat": "-23.3572",
+      "lng": "-46.8756"
+    }
+  ]
+}
