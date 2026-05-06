@@ -457,7 +457,31 @@ body.is-mobile #mapa-info-card {
 #btnSair:hover{border-color:var(--red);color:var(--red);}
 #btnExport,#btnImport{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:10px;cursor:pointer;display:none;letter-spacing:.5px;transition:all .15s;}
 #btnExport:hover,#btnImport:hover{border-color:var(--yellow);color:var(--yellow);}
+#btnSettings{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:14px;cursor:pointer;display:none;transition:all .15s;line-height:1;}
+#btnSettings:hover{border-color:var(--yellow);color:var(--yellow);}
+/* ══ SETTINGS MODAL ══ */
+#lpSettingsModal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
+#lpSettingsModal.show{display:flex !important;}
+.lp-settings-box{background:var(--card);border:1px solid rgba(245,196,0,0.35);border-radius:14px;padding:36px;width:540px;max-width:95vw;box-shadow:0 0 40px rgba(245,196,0,0.08);}
+.lp-settings-box h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--yellow);margin-bottom:24px;}
+.lp-settings-field{margin-bottom:18px;}
+.lp-settings-field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
+.lp-settings-field input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:11px 14px;color:var(--text);font-size:13px;font-family:monospace;transition:border .2s;}
+.lp-settings-field input:focus{outline:none;border-color:var(--yellow);}
+.lp-settings-field small{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
+.lp-settings-row{display:flex;gap:10px;margin-top:4px;}
+.lp-settings-btn{flex:1;background:var(--yellow);color:#000;border:none;border-radius:7px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+.lp-settings-btn:hover{background:var(--yellow2);}
+.lp-settings-btn.sec{background:transparent;border:1px solid var(--border2);color:var(--text-muted);}
+.lp-settings-btn.sec:hover{border-color:var(--yellow);color:var(--yellow);}
+.lp-settings-status{font-size:11px;padding:8px 12px;border-radius:6px;margin-top:10px;display:none;}
+.lp-settings-status.ok{display:block;background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
+.lp-settings-status.err{display:block;background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+.lp-settings-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--text-muted);}
+.lp-settings-indicator.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+.lp-settings-indicator.off{background:var(--red);}
 </style>
+<script src="https://accounts.google.com/gsi/client" onload="window._gisReady=true;if(window._onGisReady)window._onGisReady();" async defer></script>
 </head>
 <body id="appBody">
 
@@ -529,9 +553,10 @@ body.is-mobile #mapa-info-card {
       <button id="btnSair" onclick="doLogout()">Sair</button>
     </div>
     <button id="btnEntrar" onclick="showLoginModal()">Entrar</button>
+    <button id="btnSettings" onclick="showSettingsModal()" title="Configurações">⚙</button>
     <button id="btnExport" onclick="exportarDados()" title="Exportar dados">⬇ Backup</button>
     <button id="btnImport" onclick="importarDados()" title="Importar dados">⬆ Restaurar</button>
-    <span class="topbar-badge">🟢 Sistema Ativo</span>
+    <span class="topbar-badge" id="conexaoBadge">🟢 Sistema Ativo</span>
   </div>
 </div>
 
@@ -985,66 +1010,183 @@ var LP = {
   clearSession: function(){ sessionStorage.removeItem('lp_session'); }
 };
 
-var GAS_IMPL = {
-  iniciarApp: function(){
-    var cfg = _lpConfig || {users:[], unidades:[]};
-    var allU = (cfg.unidades || []).map(function(u){ return u.nome || u; });
-    var sess = LP.getSession();
-    if(sess && sess.email){
-      var found = null;
-      (cfg.users || []).forEach(function(u){ if(u.email === sess.email) found = u; });
-      if(found) return {permissao: found.permissao, email: found.email, unidadesUsuario: found.unidades || [], unidades: allU};
-    }
-    return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
-  },
+// ── Token Google OAuth ─────────────────────────────────────────
+var _gToken        = null;  // { token, expiresAt }
+var _tokenClient   = null;
 
-  lerBase: function(tipo, unidades){
-    var all = LP.getData();
-    var records = all[tipo] || [];
-    if(!unidades || !unidades.length) return records;
-    return records.filter(function(r){
-      var u = r['UNIDADE'] || r['Unidade'] || '';
-      return unidades.indexOf(u) !== -1;
-    });
-  },
+function _onGisReady() {
+  _initTokenClient();
+}
 
-  atualizarRegistro: function(tipo, updated){
-    var all = LP.getData();
-    var records = all[tipo] || [];
-    var idx = -1;
-    for(var i = 0; i < records.length; i++){
-      if(records[i]['ID'] === updated['ID']){ idx = i; break; }
-    }
-    if(idx >= 0) records[idx] = updated; else records.push(updated);
-    all[tipo] = records;
-    LP.saveData(all);
-    return {ok: true};
-  },
+function _initTokenClient() {
+  var cid = _lpConfig && _lpConfig.googleClientId;
+  if (!cid || !window.google || !window.google.accounts) return;
+  _tokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: cid,
+    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
+    callback: ''  // definido por chamada
+  });
+}
 
-  salvarRegistro: function(tipo, dados){
-    var all = LP.getData();
-    var records = all[tipo] || [];
-    var pfxMap = {
-      selo:'SEL', cracha:'CRA', investigacao:'INV', cadeado:'CAD',
-      cartao:'CAR', disciplinar:'DIS', ronda:'RON', bau:'BAU',
-      pacote:'PAC', lacre:'LAC', acesso:'ACE'
+function _getGoogleToken() {
+  if (_gToken && Date.now() < _gToken.expiresAt) return Promise.resolve(_gToken.token);
+  if (!_tokenClient) return Promise.reject('Configure o Google Client ID em ⚙ Configurações.');
+  return new Promise(function(resolve, reject) {
+    _tokenClient.callback = function(resp) {
+      if (resp.error) { reject(resp.error_description || resp.error); return; }
+      _gToken = { token: resp.access_token, expiresAt: Date.now() + (resp.expires_in * 1000) - 60000 };
+      resolve(_gToken.token);
     };
-    var pfx = pfxMap[tipo] || tipo.slice(0,3).toUpperCase();
-    var id  = pfx + '-' + String(records.length + 1).padStart(4, '0');
-    var now = new Date();
-    var d   = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-    var h   = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    var record = {ID: id, DATA: d, HORA: h, STATUS: 'Pendente'};
-    Object.keys(dados).forEach(function(k){ record[k] = dados[k]; });
-    records.push(record);
-    all[tipo] = records;
-    LP.saveData(all);
-    return {id: id};
+    _tokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+// ── Chamada à Sheets API ────────────────────────────────────────
+function _sheetsReq(method, path, body) {
+  var sid = _lpConfig && _lpConfig.spreadsheetId;
+  if (!sid) return Promise.reject('spreadsheetId não configurado em ⚙ Configurações.');
+  return _getGoogleToken().then(function(tok) {
+    var opts = { method: method, headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    return fetch('https://sheets.googleapis.com/v4/spreadsheets/' + sid + path, opts);
+  }).then(function(r) {
+    return r.json().then(function(d) {
+      if (!r.ok) throw new Error((d.error && d.error.message) || 'HTTP ' + r.status);
+      return d;
+    });
+  });
+}
+
+function _getSheetName(tipo) {
+  var n = (_lpConfig && _lpConfig.sheetNames && _lpConfig.sheetNames[tipo]);
+  return n || tipo.toUpperCase();
+}
+
+function _parseSheet(data) {
+  if (!data.values || data.values.length < 2) return [];
+  var h = data.values[0];
+  return data.values.slice(1).map(function(row) {
+    var o = {};
+    h.forEach(function(k, i) { o[k] = row[i] !== undefined ? String(row[i]) : ''; });
+    return o;
+  }).filter(function(r) { return r['ID'] || r['id']; });
+}
+
+// ── GAS_IMPL ────────────────────────────────────────────────────
+var GAS_IMPL = {
+
+  iniciarApp: function() {
+    var cfg  = _lpConfig || {users:[], unidades:[]};
+    var allU = (cfg.unidades || []).map(function(u) { return u.nome || u; });
+    var sess = LP.getSession();
+    if (sess && sess.email) {
+      var found = null;
+      (cfg.users || []).forEach(function(u) { if (u.email === sess.email) found = u; });
+      if (found) return { permissao: found.permissao, email: sess.email, unidadesUsuario: found.unidades || [], unidades: allU };
+      // Email não cadastrado → público mas autenticado
+      return { permissao: 'publico', email: sess.email, unidadesUsuario: [], unidades: allU };
+    }
+    return { permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU };
   },
 
-  lerUnidadesComCoordenadas: function(){
-    var cfg = _lpConfig || {};
-    return (cfg.unidades || []).filter(function(u){ return u.lat && u.lng; });
+  lerBase: function(tipo, unidades) {
+    if (!(_lpConfig && _lpConfig.spreadsheetId)) {
+      var all = LP.getData(), recs = all[tipo] || [];
+      if (!unidades || !unidades.length) return recs;
+      return recs.filter(function(r) { return unidades.indexOf(r['UNIDADE'] || r['Unidade'] || '') !== -1; });
+    }
+    var sheet = _getSheetName(tipo);
+    return _sheetsReq('GET', '/values/' + encodeURIComponent(sheet))
+      .then(function(data) {
+        var recs = _parseSheet(data);
+        if (!unidades || !unidades.length) return recs;
+        return recs.filter(function(r) { return unidades.indexOf(r['UNIDADE'] || r['Unidade'] || '') !== -1; });
+      });
+  },
+
+  atualizarRegistro: function(tipo, updated) {
+    if (!(_lpConfig && _lpConfig.spreadsheetId)) {
+      var all = LP.getData(), recs = all[tipo] || [], idx = -1;
+      for (var i = 0; i < recs.length; i++) { if (recs[i]['ID'] === updated['ID']) { idx = i; break; } }
+      if (idx >= 0) recs[idx] = updated; else recs.push(updated);
+      all[tipo] = recs; LP.saveData(all);
+      return {ok: true};
+    }
+    var sheet = _getSheetName(tipo);
+    return _sheetsReq('GET', '/values/' + encodeURIComponent(sheet))
+      .then(function(data) {
+        if (!data.values || data.values.length < 2) throw new Error('Aba vazia: ' + sheet);
+        var headers = data.values[0];
+        var idCol   = headers.indexOf('ID');
+        if (idCol === -1) throw new Error('Coluna ID não encontrada em ' + sheet);
+        var rowIdx  = -1;
+        for (var i = 1; i < data.values.length; i++) {
+          if (String(data.values[i][idCol]) === String(updated['ID'])) { rowIdx = i; break; }
+        }
+        if (rowIdx === -1) throw new Error('ID não encontrado: ' + updated['ID']);
+        var row   = headers.map(function(h) { return updated[h] !== undefined ? String(updated[h]) : String(data.values[rowIdx][headers.indexOf(h)] || ''); });
+        var range = encodeURIComponent(sheet + '!A' + (rowIdx + 1));
+        return _sheetsReq('PUT', '/values/' + range + '?valueInputOption=USER_ENTERED', { values: [row] })
+          .then(function() { return {ok: true}; });
+      });
+  },
+
+  salvarRegistro: function(tipo, dados) {
+    if (!(_lpConfig && _lpConfig.spreadsheetId)) {
+      var all = LP.getData(), recs = all[tipo] || [];
+      var pfx = {selo:'SEL',cracha:'CRA',investigacao:'INV',cadeado:'CAD',cartao:'CAR',disciplinar:'DIS',ronda:'RON',bau:'BAU',pacote:'PAC',lacre:'LAC',acesso:'ACE'}[tipo] || tipo.slice(0,3).toUpperCase();
+      var id  = pfx + '-' + String(recs.length + 1).padStart(4, '0');
+      var now = new Date(), d = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear(), h = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      var rec = {ID: id, DATA: d, HORA: h, STATUS: 'Pendente'};
+      Object.keys(dados).forEach(function(k) { rec[k] = dados[k]; });
+      recs.push(rec); all[tipo] = recs; LP.saveData(all);
+      return {id: id};
+    }
+    var sheet = _getSheetName(tipo);
+    return _sheetsReq('GET', '/values/' + encodeURIComponent(sheet))
+      .then(function(data) {
+        var headers  = (data.values && data.values[0]) ? data.values[0] : [];
+        var rowCount = data.values ? Math.max(data.values.length - 1, 0) : 0;
+        var pfx = {selo:'SEL',cracha:'CRA',investigacao:'INV',cadeado:'CAD',cartao:'CAR',disciplinar:'DIS',ronda:'RON',bau:'BAU',pacote:'PAC',lacre:'LAC',acesso:'ACE'}[tipo] || tipo.slice(0,3).toUpperCase();
+        var id  = pfx + '-' + String(rowCount + 1).padStart(4, '0');
+        var now = new Date(), d = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear(), h = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        var rec = {ID: id, DATA: d, HORA: h, STATUS: 'Pendente'};
+        Object.keys(dados).forEach(function(k) { rec[k] = dados[k]; });
+        // Novos cabeçalhos se necessário
+        var newCols = Object.keys(rec).filter(function(k) { return headers.indexOf(k) === -1; });
+        if (headers.length === 0) headers = Object.keys(rec);
+        else if (newCols.length) headers = headers.concat(newCols);
+        var ops = [];
+        if (newCols.length || !data.values || data.values.length === 0) {
+          ops.push(_sheetsReq('PUT', '/values/' + encodeURIComponent(sheet + '!1:1') + '?valueInputOption=USER_ENTERED', { values: [headers] }));
+        }
+        return Promise.all(ops).then(function() {
+          var row = headers.map(function(col) { return rec[col] !== undefined ? String(rec[col]) : ''; });
+          return _sheetsReq('POST', '/values/' + encodeURIComponent(sheet) + ':append?valueInputOption=USER_ENTERED', { values: [row] })
+            .then(function() { return {id: id}; });
+        });
+      });
+  },
+
+  lerUnidadesComCoordenadas: function() {
+    if (!(_lpConfig && _lpConfig.spreadsheetId)) {
+      return (_lpConfig && _lpConfig.unidades || []).filter(function(u) { return u.lat && u.lng; });
+    }
+    return _sheetsReq('GET', '/values/UNIDADES')
+      .then(function(data) {
+        if (!data.values || data.values.length < 2) return [];
+        var h = data.values[0], nIdx = Math.max(h.indexOf('NOME'), 0), llIdx = h.indexOf('LATLONG');
+        if (llIdx === -1) return [];
+        var result = [];
+        data.values.slice(1).forEach(function(row) {
+          var ll = String(row[llIdx] || '').trim();
+          if (!ll) return;
+          var p = ll.split(',');
+          if (p.length < 2) return;
+          result.push({ nome: String(row[nIdx]||''), unidade: String(row[nIdx]||''), lat: p[0].trim(), lng: p[1].trim() });
+        });
+        return result;
+      });
   }
 };
 
@@ -1058,21 +1200,28 @@ function _makeGasProxy(s, f){
     p[m] = function(){
       var a = Array.prototype.slice.call(arguments), s = _s, f = _f;
       _s = function(){}; _f = function(){};
-      setTimeout(function(){
-        try{ if(s) s(GAS_IMPL[m].apply(null, a)); }
-        catch(e){ if(f) f(String(e)); }
-      }, 10);
+      try {
+        var result = GAS_IMPL[m].apply(null, a);
+        if(result && typeof result.then === 'function'){
+          // Resultado assíncrono (fetch ao Sheets)
+          result.then(function(d){ if(s) s(d); }).catch(function(e){ if(f) f(String(e)); });
+        } else {
+          // Resultado síncrono (localStorage / iniciarApp)
+          setTimeout(function(){ if(s) s(result); }, 10);
+        }
+      } catch(e){
+        setTimeout(function(){ if(f) f(String(e)); }, 10);
+      }
     };
   });
   return p;
 }
 
-var google = {
-  script: {
-    run: {
-      withSuccessHandler: function(fn){ return _makeGasProxy(fn, null); },
-      withFailureHandler: function(fn){ return _makeGasProxy(null, fn); }
-    }
+window.google = window.google || {};
+window.google.script = {
+  run: {
+    withSuccessHandler: function(fn){ return _makeGasProxy(fn, null); },
+    withFailureHandler: function(fn){ return _makeGasProxy(null, fn); }
   }
 };
 
@@ -1658,7 +1807,17 @@ function _onAuthFail(err) {
       };
     })
     .finally(function(){
-      google.script.run
+      // Restaura configurações salvas manualmente (override ao config.json)
+      var savedCid = localStorage.getItem('lp_googleClientId');
+      var savedSid = localStorage.getItem('lp_spreadsheetId');
+      if (_lpConfig && savedCid) _lpConfig.googleClientId  = savedCid;
+      if (_lpConfig && savedSid) _lpConfig.spreadsheetId   = savedSid;
+      // Restaura sheetNames se salvos
+      try { var sn = localStorage.getItem('lp_sheetNames'); if(sn && _lpConfig) _lpConfig.sheetNames = JSON.parse(sn); } catch(e){}
+      // Inicia token client GIS se já carregou
+      if (window._gisReady) _initTokenClient();
+      window._onGisReady = _initTokenClient;
+      window.google.script.run
         .withSuccessHandler(_onAuthSuccess)
         .withFailureHandler(_onAuthFail)
         .iniciarApp();
@@ -2004,7 +2163,7 @@ function _renderizarMapa(unidades) {
         '<div style="padding:14px 16px;border-bottom:1px solid rgba(245,196,0,0.1);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--yellow);">📍 Unidades (' + unidades.length + ')</div>' +
         unidades.map(function(u, i) {
           return '<button onclick="focarUnidade(' + i + ')" style="text-align:left;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:12px 16px;cursor:pointer;transition:background .15s;width:100%;" ' +
-            'onmouseover="this.style.background='rgba(245,196,0,0.07)'" onmouseout="this.style.background='none'" ' +
+            'onmouseover="this.style.background=\'rgba(245,196,0,0.07)\'" onmouseout="this.style.background=\'none\'" ' +
             'id="lista-item-' + i + '">' +
             '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);margin-bottom:2px;">' + (u.unidade || '—') + '</div>' +
             '<div style="font-size:10px;color:var(--text-muted);">' + u.lat + ', ' + u.lng + '</div>' +
@@ -2114,32 +2273,139 @@ function _mostrarInfoCard(u) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES — URL do GAS Web App
+// ════════════════════════════════════════════════════════════════
+function showSettingsModal(){
+  document.getElementById('settingsClientId').value  = (_lpConfig && _lpConfig.googleClientId)  || localStorage.getItem('lp_googleClientId') || '';
+  document.getElementById('settingsSheetId').value   = (_lpConfig && _lpConfig.spreadsheetId)   || localStorage.getItem('lp_spreadsheetId')  || '';
+  var sn = (_lpConfig && _lpConfig.sheetNames) || null;
+  document.getElementById('settingsSheetNames').value = sn ? JSON.stringify(sn) : '';
+  document.getElementById('settingsStatus').className = 'lp-settings-status';
+  _atualizarStatusConexao();
+  document.getElementById('lpSettingsModal').classList.add('show');
+}
+function hideSettingsModal(){
+  document.getElementById('lpSettingsModal').classList.remove('show');
+}
+function salvarSettings(){
+  var cid = document.getElementById('settingsClientId').value.trim();
+  var sid = document.getElementById('settingsSheetId').value.trim();
+  var snRaw = document.getElementById('settingsSheetNames').value.trim();
+  // Salva em localStorage (override ao config.json)
+  if (cid) localStorage.setItem('lp_googleClientId', cid); else localStorage.removeItem('lp_googleClientId');
+  if (sid) localStorage.setItem('lp_spreadsheetId',  sid); else localStorage.removeItem('lp_spreadsheetId');
+  if (snRaw) { try { localStorage.setItem('lp_sheetNames', snRaw); } catch(e){} }
+  // Aplica em _lpConfig
+  if (!_lpConfig) _lpConfig = {};
+  if (cid) _lpConfig.googleClientId = cid;
+  if (sid) _lpConfig.spreadsheetId  = sid;
+  if (snRaw) { try { _lpConfig.sheetNames = JSON.parse(snRaw); } catch(e){} }
+  // Re-inicia token client com novo clientId
+  _gToken = null;
+  _tokenClient = null;
+  _initTokenClient();
+  _atualizarStatusConexao();
+  hideSettingsModal();
+  showSuccess('Configurações salvas! Faça login para ativar.');
+}
+function testarConexao(){
+  var sid = document.getElementById('settingsSheetId').value.trim();
+  var cid = document.getElementById('settingsClientId').value.trim();
+  var el  = document.getElementById('settingsStatus');
+  if (!cid || !sid) { el.className='lp-settings-status err'; el.textContent='⚠ Preencha Client ID e ID da Planilha primeiro.'; return; }
+  el.className='lp-settings-status ok'; el.textContent='⏳ Autenticando com Google...';
+  if (!_tokenClient) { _initTokenClient(); }
+  if (!_tokenClient) { el.className='lp-settings-status err'; el.textContent='GIS não carregado. Aguarde e tente novamente.'; return; }
+  _tokenClient.callback = function(resp) {
+    if (resp.error) { el.className='lp-settings-status err'; el.textContent='✗ Auth falhou: ' + (resp.error_description||resp.error); return; }
+    var tok = resp.access_token;
+    el.textContent = '⏳ Lendo planilha...';
+    fetch('https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/UNIDADES', {
+      headers: { Authorization: 'Bearer ' + tok }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) { el.className='lp-settings-status err'; el.textContent='✗ Erro Sheets: ' + d.error.message; }
+      else { el.className='lp-settings-status ok'; el.textContent='✓ Planilha acessível! ' + ((d.values && d.values.length-1)||0) + ' unidade(s) na aba UNIDADES.'; }
+    })
+    .catch(function(e){ el.className='lp-settings-status err'; el.textContent='✗ Erro de rede: ' + String(e); });
+  };
+  _tokenClient.requestAccessToken({ prompt: 'select_account' });
+}
+function _atualizarStatusConexao(){
+  var badge = document.getElementById('conexaoBadge');
+  if(!badge) return;
+  var sid = (_lpConfig && _lpConfig.spreadsheetId) || localStorage.getItem('lp_spreadsheetId');
+  if(sid){ badge.innerHTML='🟢 Sheets Conectado'; badge.style.color='var(--green)'; }
+  else   { badge.innerHTML='🟡 Modo Local';       badge.style.color='var(--yellow)'; }
+}
+
+// ════════════════════════════════════════════════════════════════
 // LOGIN / LOGOUT
 // ════════════════════════════════════════════════════════════════
 function showLoginModal(){
   var modal = document.getElementById('lpLoginModal');
   if(modal) modal.classList.add('show');
-  setTimeout(function(){ var e = document.getElementById('lpLoginEmail'); if(e) e.focus(); }, 80);
+  // Mostra UI Google ou email/senha dependendo da config
+  var hasGoogle  = _lpConfig && _lpConfig.googleClientId;
+  var gWrap  = document.getElementById('lpLoginGoogleWrap');
+  var lWrap  = document.getElementById('lpLoginLocalWrap');
+  var subtitle = document.getElementById('lpLoginSubtitle');
+  if (gWrap) gWrap.style.display = hasGoogle ? 'block' : 'none';
+  if (lWrap) lWrap.style.display = hasGoogle ? 'none'  : 'block';
+  if (subtitle) subtitle.textContent = hasGoogle ? 'Acesse com sua conta Google' : 'Acesse com suas credenciais';
+  if (!hasGoogle) setTimeout(function(){ var e=document.getElementById('lpLoginEmail'); if(e) e.focus(); }, 80);
 }
 function hideLoginModal(){
   document.getElementById('lpLoginModal').classList.remove('show');
   document.getElementById('lpLoginErr').classList.remove('show');
 }
 function doLogin(){
-  var email = (document.getElementById('lpLoginEmail').value || '').trim().toLowerCase();
-  var senha = document.getElementById('lpLoginSenha').value || '';
-  var cfg   = _lpConfig || {users:[]};
-  var user  = null;
-  (cfg.users || []).forEach(function(u){
-    if((u.email || '').toLowerCase() === email && u.senha === senha) user = u;
-  });
-  if(!user){ document.getElementById('lpLoginErr').classList.add('show'); return; }
-  LP.saveSession({email: user.email});
-  hideLoginModal();
-  document.getElementById('authLoading').style.display = 'flex';
-  google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
+  var hasGoogle = _lpConfig && _lpConfig.googleClientId;
+  if (hasGoogle) {
+    // ── Login via Google OAuth ──
+    if (!_tokenClient) { _initTokenClient(); }
+    if (!_tokenClient) { alert('GIS ainda não carregou. Aguarde e tente novamente.'); return; }
+    document.getElementById('lpLoginErr').classList.remove('show');
+    _tokenClient.callback = function(resp) {
+      if (resp.error) {
+        document.getElementById('lpLoginErr').textContent = 'Erro Google: ' + (resp.error_description || resp.error);
+        document.getElementById('lpLoginErr').classList.add('show');
+        return;
+      }
+      _gToken = { token: resp.access_token, expiresAt: Date.now() + (resp.expires_in * 1000) - 60000 };
+      fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+        headers: { Authorization: 'Bearer ' + _gToken.token }
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(info){
+        LP.saveSession({ email: info.email });
+        hideLoginModal();
+        document.getElementById('authLoading').style.display = 'flex';
+        window.google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
+      })
+      .catch(function(){ document.getElementById('lpLoginErr').textContent='Erro ao obter dados do usuário.'; document.getElementById('lpLoginErr').classList.add('show'); });
+    };
+    _tokenClient.requestAccessToken({ prompt: 'select_account' });
+  } else {
+    // ── Fallback: login email+senha (modo localStorage) ──
+    var email = (document.getElementById('lpLoginEmail').value || '').trim().toLowerCase();
+    var senha = document.getElementById('lpLoginSenha').value || '';
+    var cfg   = _lpConfig || {users:[]};
+    var user  = null;
+    (cfg.users || []).forEach(function(u){ if((u.email||'').toLowerCase()===email && u.senha===senha) user=u; });
+    if(!user){ document.getElementById('lpLoginErr').classList.add('show'); return; }
+    LP.saveSession({email: user.email});
+    hideLoginModal();
+    document.getElementById('authLoading').style.display = 'flex';
+    window.google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
+  }
 }
 function doLogout(){
+  if (_gToken && window.google && window.google.accounts && window.google.accounts.oauth2) {
+    window.google.accounts.oauth2.revoke(_gToken.token, function(){});
+    _gToken = null;
+  }
   LP.clearSession();
   location.reload();
 }
@@ -2155,10 +2421,13 @@ function doLogout(){
     var bS   = document.getElementById('btnSair');
     var bExp = document.getElementById('btnExport');
     var bImp = document.getElementById('btnImport');
+    var bSet = document.getElementById('btnSettings');
     if(bE)   bE.style.display   = (permissao === 'publico' && !email) ? 'inline-block' : 'none';
     if(bS)   bS.style.display   = (email && permissao !== 'publico')  ? 'inline-block' : 'none';
+    if(bSet) bSet.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bExp) bExp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bImp) bImp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
+    _atualizarStatusConexao();
   };
 })();
 
@@ -2206,22 +2475,60 @@ function importarDados(){
 
 </script>
 
+<!-- ══ SETTINGS MODAL ══ -->
+<div id="lpSettingsModal">
+  <div class="lp-settings-box">
+    <h2>⚙ Configurações — Google Sheets</h2>
+    <div class="lp-settings-field">
+      <label>Google OAuth Client ID</label>
+      <input type="text" id="settingsClientId" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com">
+      <small>Crie em <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--yellow)">Google Cloud Console</a> → Credenciais → OAuth 2.0 Client ID (tipo: Web). Adicione sua URL do GitHub Pages como origem autorizada.</small>
+    </div>
+    <div class="lp-settings-field">
+      <label>ID da Planilha</label>
+      <input type="text" id="settingsSheetId" placeholder="1Foln_V3Pq0jqC7xDSNytYzMF_k3S2Amfdt6-U4ZgMxg">
+      <small>Apenas o ID — parte entre <code style="color:var(--yellow)">/d/</code> e <code style="color:var(--yellow)">/edit</code> da URL.</small>
+    </div>
+    <div class="lp-settings-field">
+      <label>Nomes das Abas (JSON)</label>
+      <input type="text" id="settingsSheetNames" placeholder='{"selo":"SELOS","cracha":"CRACHAS",...}'>
+      <small>Mapeamento tipo → nome da aba. Deixe em branco para usar os padrões do backend.gs.</small>
+    </div>
+    <div id="settingsStatus" class="lp-settings-status"></div>
+    <div class="lp-settings-row" style="margin-top:16px;">
+      <button class="lp-settings-btn sec" onclick="testarConexao()">Testar conexão</button>
+      <button class="lp-settings-btn" onclick="salvarSettings()">Salvar</button>
+    </div>
+    <div style="text-align:right;margin-top:12px;">
+      <span onclick="hideSettingsModal()" style="font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">Fechar</span>
+    </div>
+  </div>
+</div>
+
 <!-- ══ LOGIN MODAL ══ -->
 <div id="lpLoginModal">
   <div class="lp-login-box">
     <div class="lp-login-logo">
       <h2>🔒 Loss Prevention</h2>
-      <p>Acesse com suas credenciais</p>
+      <p id="lpLoginSubtitle">Acesse com sua conta Google</p>
     </div>
-    <div class="lp-login-field">
-      <label>E-mail</label>
-      <input type="email" id="lpLoginEmail" placeholder="seu@email.com" autocomplete="username">
+    <div id="lpLoginGoogleWrap">
+      <button class="lp-login-btn" onclick="doLogin()" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 16 19 13 24 13c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.6-3.3-11.2-8L6.1 33.2C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+        Entrar com Google
+      </button>
     </div>
-    <div class="lp-login-field">
-      <label>Senha</label>
-      <input type="password" id="lpLoginSenha" placeholder="••••••••" autocomplete="current-password">
+    <div id="lpLoginLocalWrap" style="display:none">
+      <div class="lp-login-field">
+        <label>E-mail</label>
+        <input type="email" id="lpLoginEmail" placeholder="seu@email.com" autocomplete="username">
+      </div>
+      <div class="lp-login-field">
+        <label>Senha</label>
+        <input type="password" id="lpLoginSenha" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="lp-login-btn" onclick="doLogin()">Entrar</button>
     </div>
-    <button class="lp-login-btn" onclick="doLogin()">Entrar</button>
     <div class="lp-login-err" id="lpLoginErr">E-mail ou senha incorretos.</div>
     <span class="lp-login-skip" onclick="hideLoginModal()">Continuar como público</span>
   </div>

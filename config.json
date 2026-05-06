@@ -1,8 +1,25 @@
 {
   "_instrucoes": {
-    "usuarios": "Adicione/remova usuários na lista 'users'. Permissões: Administrador, Usuario, Portaria",
-    "unidades": "Cada unidade precisa de 'nome'. Os campos 'lat' e 'lng' são opcionais (usados no mapa)",
-    "senha": "Troque as senhas padrão antes de publicar o site"
+    "googleClientId": "OAuth 2.0 Client ID do Google Cloud Console (tipo Web). Adicione a URL do GitHub Pages como origem autorizada.",
+    "spreadsheetId": "Apenas o ID da planilha — parte entre /d/ e /edit na URL",
+    "sheetNames": "Mapeamento opcional tipo→aba. Padrão: {\"selo\":\"SELOS\",\"cracha\":\"CRACHAS\",\"investigacao\":\"INVESTIGACOES\",\"cadeado\":\"CADEADOS\",\"cartao\":\"CARTOES\",\"disciplinar\":\"DISCIPLINAR\",\"ronda\":\"RONDAS\",\"bau\":\"BAU\",\"pacote\":\"PACOTES\",\"lacre\":\"LACRES\",\"acesso\":\"ACESSOS\"}",
+    "usuarios": "Com googleClientId: emails do Google devem estar em 'users' para ter permissões. Sem: login email+senha.",
+    "unidades": "Sem spreadsheetId: defina unidades aqui. Com spreadsheetId: lidas da aba UNIDADES da planilha"
+  },
+  "googleClientId": "",
+  "spreadsheetId": "",
+  "sheetNames": {
+    "selo": "SELOS",
+    "cracha": "CRACHAS",
+    "investigacao": "INVESTIGACOES",
+    "cadeado": "CADEADOS",
+    "cartao": "CARTOES",
+    "disciplinar": "DISCIPLINAR",
+    "ronda": "RONDAS",
+    "bau": "BAU",
+    "pacote": "PACOTES",
+    "lacre": "LACRES",
+    "acesso": "ACESSOS"
   },
   "users": [
     {
