@@ -457,6 +457,29 @@ body.is-mobile #mapa-info-card {
 #btnSair:hover{border-color:var(--red);color:var(--red);}
 #btnExport,#btnImport{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:10px;cursor:pointer;display:none;letter-spacing:.5px;transition:all .15s;}
 #btnExport:hover,#btnImport:hover{border-color:var(--yellow);color:var(--yellow);}
+#btnSettings{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:14px;cursor:pointer;display:none;transition:all .15s;line-height:1;}
+#btnSettings:hover{border-color:var(--yellow);color:var(--yellow);}
+/* ══ SETTINGS MODAL ══ */
+#lpSettingsModal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
+#lpSettingsModal.show{display:flex !important;}
+.lp-settings-box{background:var(--card);border:1px solid rgba(245,196,0,0.35);border-radius:14px;padding:36px;width:540px;max-width:95vw;box-shadow:0 0 40px rgba(245,196,0,0.08);}
+.lp-settings-box h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--yellow);margin-bottom:24px;}
+.lp-settings-field{margin-bottom:18px;}
+.lp-settings-field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
+.lp-settings-field input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:11px 14px;color:var(--text);font-size:13px;font-family:monospace;transition:border .2s;}
+.lp-settings-field input:focus{outline:none;border-color:var(--yellow);}
+.lp-settings-field small{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
+.lp-settings-row{display:flex;gap:10px;margin-top:4px;}
+.lp-settings-btn{flex:1;background:var(--yellow);color:#000;border:none;border-radius:7px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+.lp-settings-btn:hover{background:var(--yellow2);}
+.lp-settings-btn.sec{background:transparent;border:1px solid var(--border2);color:var(--text-muted);}
+.lp-settings-btn.sec:hover{border-color:var(--yellow);color:var(--yellow);}
+.lp-settings-status{font-size:11px;padding:8px 12px;border-radius:6px;margin-top:10px;display:none;}
+.lp-settings-status.ok{display:block;background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
+.lp-settings-status.err{display:block;background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+.lp-settings-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--text-muted);}
+.lp-settings-indicator.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+.lp-settings-indicator.off{background:var(--red);}
 </style>
 </head>
 <body id="appBody">
@@ -529,9 +552,10 @@ body.is-mobile #mapa-info-card {
       <button id="btnSair" onclick="doLogout()">Sair</button>
     </div>
     <button id="btnEntrar" onclick="showLoginModal()">Entrar</button>
+    <button id="btnSettings" onclick="showSettingsModal()" title="Configurações">⚙</button>
     <button id="btnExport" onclick="exportarDados()" title="Exportar dados">⬇ Backup</button>
     <button id="btnImport" onclick="importarDados()" title="Importar dados">⬆ Restaurar</button>
-    <span class="topbar-badge">🟢 Sistema Ativo</span>
+    <span class="topbar-badge" id="conexaoBadge">🟢 Sistema Ativo</span>
   </div>
 </div>
 
@@ -986,6 +1010,8 @@ var LP = {
 };
 
 var GAS_IMPL = {
+
+  // ── Autenticação: sempre local via config.json ──────────────────
   iniciarApp: function(){
     var cfg = _lpConfig || {users:[], unidades:[]};
     var allU = (cfg.unidades || []).map(function(u){ return u.nome || u; });
@@ -998,53 +1024,64 @@ var GAS_IMPL = {
     return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
   },
 
+  // ── Chamada HTTP ao GAS Web App ─────────────────────────────────
+  _post: function(payload){
+    var url = (_lpConfig && _lpConfig.gasWebAppUrl) || '';
+    if(!url) return Promise.reject('gasWebAppUrl não configurada. Vá em Configurações e cole a URL do Web App.');
+    return fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(function(r){
+      if(!r.ok) throw new Error('Erro HTTP ' + r.status);
+      return r.json();
+    }).then(function(data){
+      if(data && data.error) throw new Error(data.error);
+      return data;
+    });
+  },
+
+  // ── Dados: Sheets se URL configurada, localStorage como fallback ─
   lerBase: function(tipo, unidades){
-    var all = LP.getData();
-    var records = all[tipo] || [];
+    if(_lpConfig && _lpConfig.gasWebAppUrl){
+      return GAS_IMPL._post({action:'lerBase', tipo:tipo, unidades:unidades||[]});
+    }
+    var all = LP.getData(), records = all[tipo] || [];
     if(!unidades || !unidades.length) return records;
     return records.filter(function(r){
-      var u = r['UNIDADE'] || r['Unidade'] || '';
-      return unidades.indexOf(u) !== -1;
+      return (unidades.indexOf(r['UNIDADE']||r['Unidade']||'')) !== -1;
     });
   },
 
   atualizarRegistro: function(tipo, updated){
-    var all = LP.getData();
-    var records = all[tipo] || [];
-    var idx = -1;
-    for(var i = 0; i < records.length; i++){
-      if(records[i]['ID'] === updated['ID']){ idx = i; break; }
+    if(_lpConfig && _lpConfig.gasWebAppUrl){
+      return GAS_IMPL._post({action:'atualizarRegistro', tipo:tipo, updated:updated});
     }
-    if(idx >= 0) records[idx] = updated; else records.push(updated);
-    all[tipo] = records;
-    LP.saveData(all);
-    return {ok: true};
+    var all = LP.getData(), records = all[tipo] || [], idx = -1;
+    for(var i=0;i<records.length;i++){ if(records[i]['ID']===updated['ID']){idx=i;break;} }
+    if(idx>=0) records[idx]=updated; else records.push(updated);
+    all[tipo]=records; LP.saveData(all);
+    return {ok:true};
   },
 
   salvarRegistro: function(tipo, dados){
-    var all = LP.getData();
-    var records = all[tipo] || [];
-    var pfxMap = {
-      selo:'SEL', cracha:'CRA', investigacao:'INV', cadeado:'CAD',
-      cartao:'CAR', disciplinar:'DIS', ronda:'RON', bau:'BAU',
-      pacote:'PAC', lacre:'LAC', acesso:'ACE'
-    };
-    var pfx = pfxMap[tipo] || tipo.slice(0,3).toUpperCase();
-    var id  = pfx + '-' + String(records.length + 1).padStart(4, '0');
-    var now = new Date();
-    var d   = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-    var h   = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    var record = {ID: id, DATA: d, HORA: h, STATUS: 'Pendente'};
-    Object.keys(dados).forEach(function(k){ record[k] = dados[k]; });
-    records.push(record);
-    all[tipo] = records;
-    LP.saveData(all);
-    return {id: id};
+    if(_lpConfig && _lpConfig.gasWebAppUrl){
+      return GAS_IMPL._post({action:'salvarRegistro', tipo:tipo, dados:dados});
+    }
+    var all = LP.getData(), records = all[tipo] || [];
+    var pfx = {selo:'SEL',cracha:'CRA',investigacao:'INV',cadeado:'CAD',cartao:'CAR',disciplinar:'DIS',ronda:'RON',bau:'BAU',pacote:'PAC',lacre:'LAC',acesso:'ACE'}[tipo]||tipo.slice(0,3).toUpperCase();
+    var id = pfx+'-'+String(records.length+1).padStart(4,'0');
+    var now=new Date(), d=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear(), h=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    var rec={ID:id,DATA:d,HORA:h,STATUS:'Pendente'};
+    Object.keys(dados).forEach(function(k){rec[k]=dados[k];});
+    records.push(rec); all[tipo]=records; LP.saveData(all);
+    return {id:id};
   },
 
   lerUnidadesComCoordenadas: function(){
-    var cfg = _lpConfig || {};
-    return (cfg.unidades || []).filter(function(u){ return u.lat && u.lng; });
+    if(_lpConfig && _lpConfig.gasWebAppUrl){
+      return GAS_IMPL._post({action:'lerUnidades'});
+    }
+    return (_lpConfig&&_lpConfig.unidades||[]).filter(function(u){return u.lat&&u.lng;});
   }
 };
 
@@ -1058,10 +1095,18 @@ function _makeGasProxy(s, f){
     p[m] = function(){
       var a = Array.prototype.slice.call(arguments), s = _s, f = _f;
       _s = function(){}; _f = function(){};
-      setTimeout(function(){
-        try{ if(s) s(GAS_IMPL[m].apply(null, a)); }
-        catch(e){ if(f) f(String(e)); }
-      }, 10);
+      try {
+        var result = GAS_IMPL[m].apply(null, a);
+        if(result && typeof result.then === 'function'){
+          // Resultado assíncrono (fetch ao Sheets)
+          result.then(function(d){ if(s) s(d); }).catch(function(e){ if(f) f(String(e)); });
+        } else {
+          // Resultado síncrono (localStorage / iniciarApp)
+          setTimeout(function(){ if(s) s(result); }, 10);
+        }
+      } catch(e){
+        setTimeout(function(){ if(f) f(String(e)); }, 10);
+      }
     };
   });
   return p;
@@ -1658,6 +1703,11 @@ function _onAuthFail(err) {
       };
     })
     .finally(function(){
+      // Se config.json não tiver URL mas o admin salvou manualmente, restaura
+      if(_lpConfig && !_lpConfig.gasWebAppUrl){
+        var saved = localStorage.getItem('lp_webAppUrl');
+        if(saved) _lpConfig.gasWebAppUrl = saved;
+      }
       google.script.run
         .withSuccessHandler(_onAuthSuccess)
         .withFailureHandler(_onAuthFail)
@@ -2114,6 +2164,49 @@ function _mostrarInfoCard(u) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES — URL do GAS Web App
+// ════════════════════════════════════════════════════════════════
+function showSettingsModal(){
+  var url = (_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '';
+  document.getElementById('settingsWebAppUrl').value = url;
+  _atualizarStatusConexao(url);
+  document.getElementById('lpSettingsModal').classList.add('show');
+}
+function hideSettingsModal(){
+  document.getElementById('lpSettingsModal').classList.remove('show');
+}
+function salvarSettings(){
+  var url = document.getElementById('settingsWebAppUrl').value.trim();
+  if(_lpConfig) _lpConfig.gasWebAppUrl = url;
+  localStorage.setItem('lp_webAppUrl', url);
+  _atualizarStatusConexao(url);
+  hideSettingsModal();
+  if(url) {
+    showSuccess('URL salva! Recarregando dados...');
+    setTimeout(function(){ location.reload(); }, 1200);
+  }
+}
+function testarConexao(){
+  var url = document.getElementById('settingsWebAppUrl').value.trim();
+  if(!url){ document.getElementById('settingsStatus').className='lp-settings-status err'; document.getElementById('settingsStatus').textContent='⚠ Cole a URL do Web App primeiro.'; return; }
+  var el = document.getElementById('settingsStatus');
+  el.className='lp-settings-status ok'; el.textContent='⏳ Testando conexão...';
+  fetch(url, {method:'POST', body: JSON.stringify({action:'lerUnidades'})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.error){ el.className='lp-settings-status err'; el.textContent='✗ Erro da planilha: ' + d.error; }
+      else { el.className='lp-settings-status ok'; el.textContent='✓ Conexão OK! ' + (Array.isArray(d) ? d.length + ' unidade(s) encontrada(s).' : 'Planilha respondeu.'); }
+    })
+    .catch(function(e){ el.className='lp-settings-status err'; el.textContent='✗ Falha de rede: ' + String(e) + ' — Verifique se o Web App está implantado como "Anyone".'; });
+}
+function _atualizarStatusConexao(url){
+  var badge = document.getElementById('conexaoBadge');
+  if(!badge) return;
+  if(url){ badge.innerHTML='🟢 Sheets Conectado'; badge.style.color='var(--green)'; }
+  else    { badge.innerHTML='🟡 Modo Local';      badge.style.color='var(--yellow)'; }
+}
+
+// ════════════════════════════════════════════════════════════════
 // LOGIN / LOGOUT
 // ════════════════════════════════════════════════════════════════
 function showLoginModal(){
@@ -2155,10 +2248,13 @@ function doLogout(){
     var bS   = document.getElementById('btnSair');
     var bExp = document.getElementById('btnExport');
     var bImp = document.getElementById('btnImport');
+    var bSet = document.getElementById('btnSettings');
     if(bE)   bE.style.display   = (permissao === 'publico' && !email) ? 'inline-block' : 'none';
     if(bS)   bS.style.display   = (email && permissao !== 'publico')  ? 'inline-block' : 'none';
+    if(bSet) bSet.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bExp) bExp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bImp) bImp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
+    _atualizarStatusConexao((_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '');
   };
 })();
 
@@ -2205,6 +2301,30 @@ function importarDados(){
 
 
 </script>
+
+<!-- ══ SETTINGS MODAL ══ -->
+<div id="lpSettingsModal">
+  <div class="lp-settings-box">
+    <h2>⚙ Configurações</h2>
+    <div class="lp-settings-field">
+      <label><span class="lp-settings-indicator" id="connIndicator"></span>URL do GAS Web App (Google Sheets)</label>
+      <input type="url" id="settingsWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <small>
+        Implante o <strong>backend.gs</strong> no <a href="https://script.google.com" target="_blank" style="color:var(--yellow)">Google Apps Script</a>
+        como Web App (Execute as: Me · Who has access: Anyone) e cole a URL aqui.<br>
+        Deixe em branco para usar armazenamento local (localStorage).
+      </small>
+    </div>
+    <div id="settingsStatus" class="lp-settings-status"></div>
+    <div class="lp-settings-row" style="margin-top:16px;">
+      <button class="lp-settings-btn sec" onclick="testarConexao()">Testar conexão</button>
+      <button class="lp-settings-btn" onclick="salvarSettings()">Salvar</button>
+    </div>
+    <div style="text-align:right;margin-top:12px;">
+      <span onclick="hideSettingsModal()" style="font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">Fechar</span>
+    </div>
+  </div>
+</div>
 
 <!-- ══ LOGIN MODAL ══ -->
 <div id="lpLoginModal">

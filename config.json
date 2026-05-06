@@ -1,9 +1,11 @@
 {
   "_instrucoes": {
+    "gasWebAppUrl": "Cole aqui a URL do Web App gerada ao implantar o backend.gs no Google Apps Script",
     "usuarios": "Adicione/remova usuários na lista 'users'. Permissões: Administrador, Usuario, Portaria",
-    "unidades": "Cada unidade precisa de 'nome'. Os campos 'lat' e 'lng' são opcionais (usados no mapa)",
+    "unidades": "Sem gasWebAppUrl: defina unidades aqui. Com gasWebAppUrl: lidas da aba UNIDADES da planilha",
     "senha": "Troque as senhas padrão antes de publicar o site"
   },
+  "gasWebAppUrl": "",
   "users": [
     {
       "email": "admin@empresa.com",
