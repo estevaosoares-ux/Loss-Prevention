@@ -1,31 +1,10 @@
 {
   "_instrucoes": {
     "gasWebAppUrl": "Cole aqui a URL do Web App gerada ao implantar o backend.gs no Google Apps Script",
-    "usuarios": "Adicione/remova usuários na lista 'users'. Permissões: Administrador, Usuario, Portaria",
     "unidades": "Sem gasWebAppUrl: defina unidades aqui. Com gasWebAppUrl: lidas da aba UNIDADES da planilha",
-    "senha": "Troque as senhas padrão antes de publicar o site"
+    "auth": "Autenticação via Google SSO (domínio mercadolibre.com.br). Usuários e permissões gerenciados na planilha de Loss Prevention, aba USUARIOS"
   },
   "gasWebAppUrl": "",
-  "users": [
-    {
-      "email": "admin@empresa.com",
-      "senha": "admin123",
-      "permissao": "Administrador",
-      "unidades": []
-    },
-    {
-      "email": "supervisor@empresa.com",
-      "senha": "super123",
-      "permissao": "Usuario",
-      "unidades": []
-    },
-    {
-      "email": "portaria@empresa.com",
-      "senha": "portaria123",
-      "permissao": "Portaria",
-      "unidades": []
-    }
-  ],
   "unidades": [
     {
       "nome": "CD São Paulo",

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loss Prevention — Gestão</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg:#080808; --bg2:#111; --card:#141414; --card2:#1a1a1a;
@@ -1011,17 +1012,21 @@ var LP = {
 
 var GAS_IMPL = {
 
-  // ── Autenticação: sempre local via config.json ──────────────────
+  // ── Autenticação: Google SSO + validação na planilha ───────────
   iniciarApp: function(){
-    var cfg = _lpConfig || {users:[], unidades:[]};
+    var cfg = _lpConfig || {unidades:[]};
     var allU = (cfg.unidades || []).map(function(u){ return u.nome || u; });
     var sess = LP.getSession();
-    if(sess && sess.email){
-      var found = null;
-      (cfg.users || []).forEach(function(u){ if(u.email === sess.email) found = u; });
-      if(found) return {permissao: found.permissao, email: found.email, unidadesUsuario: found.unidades || [], unidades: allU};
+    if(!sess || !sess.email) return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
+    var email = sess.email;
+    if(cfg.gasWebAppUrl){
+      return GAS_IMPL._post({action:'iniciarApp', email: email}).then(function(res){
+        if(!res) return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: allU};
+        if(!res.unidades || !res.unidades.length) res.unidades = allU;
+        return res;
+      });
     }
-    return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
+    return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: allU};
   },
 
   // ── Chamada HTTP ao GAS Web App ─────────────────────────────────
@@ -1112,12 +1117,12 @@ function _makeGasProxy(s, f){
   return p;
 }
 
-var google = {
-  script: {
-    run: {
-      withSuccessHandler: function(fn){ return _makeGasProxy(fn, null); },
-      withFailureHandler: function(fn){ return _makeGasProxy(null, fn); }
-    }
+// Preserva google.accounts.id (GIS) e adiciona google.script.run (mock GAS)
+window.google = window.google || {};
+window.google.script = {
+  run: {
+    withSuccessHandler: function(fn){ return _makeGasProxy(fn, null); },
+    withFailureHandler: function(fn){ return _makeGasProxy(null, fn); }
   }
 };
 
@@ -2207,33 +2212,66 @@ function _atualizarStatusConexao(url){
 }
 
 // ════════════════════════════════════════════════════════════════
-// LOGIN / LOGOUT
+// LOGIN / LOGOUT — Google SSO
 // ════════════════════════════════════════════════════════════════
+var _gisInitialized = false;
+
 function showLoginModal(){
   var modal = document.getElementById('lpLoginModal');
   if(modal) modal.classList.add('show');
-  setTimeout(function(){ var e = document.getElementById('lpLoginEmail'); if(e) e.focus(); }, 80);
+  document.getElementById('lpLoginErr').classList.remove('show');
+  _renderGoogleButton();
 }
+
+function _renderGoogleButton(){
+  if(!window.google || !window.google.accounts || !window.google.accounts.id){
+    setTimeout(_renderGoogleButton, 300);
+    return;
+  }
+  if(!_gisInitialized){
+    window.google.accounts.id.initialize({
+      client_id: 'COLE_SEU_GOOGLE_CLIENT_ID_AQUI',
+      callback: handleGoogleSignIn,
+      hd: 'mercadolibre.com.br'
+    });
+    _gisInitialized = true;
+  }
+  var container = document.getElementById('googleSignInContainer');
+  if(container) window.google.accounts.id.renderButton(container,
+    {theme:'outline', size:'large', text:'signin_with', width:308, locale:'pt-BR'});
+}
+
+function handleGoogleSignIn(response){
+  try{
+    var parts = response.credential.split('.');
+    var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+    var email = (payload.email || '').toLowerCase();
+    if(!email.endsWith('@mercadolibre.com.br')){
+      var err = document.getElementById('lpLoginErr');
+      err.textContent = 'Acesso restrito ao domínio @mercadolibre.com.br';
+      err.classList.add('show');
+      return;
+    }
+    LP.saveSession({email: email});
+    hideLoginModal();
+    document.getElementById('authLoading').style.display = 'flex';
+    google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
+  }catch(e){
+    var err = document.getElementById('lpLoginErr');
+    err.textContent = 'Erro ao processar autenticação. Tente novamente.';
+    err.classList.add('show');
+  }
+}
+
 function hideLoginModal(){
   document.getElementById('lpLoginModal').classList.remove('show');
   document.getElementById('lpLoginErr').classList.remove('show');
 }
-function doLogin(){
-  var email = (document.getElementById('lpLoginEmail').value || '').trim().toLowerCase();
-  var senha = document.getElementById('lpLoginSenha').value || '';
-  var cfg   = _lpConfig || {users:[]};
-  var user  = null;
-  (cfg.users || []).forEach(function(u){
-    if((u.email || '').toLowerCase() === email && u.senha === senha) user = u;
-  });
-  if(!user){ document.getElementById('lpLoginErr').classList.add('show'); return; }
-  LP.saveSession({email: user.email});
-  hideLoginModal();
-  document.getElementById('authLoading').style.display = 'flex';
-  google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
-}
+
 function doLogout(){
   LP.clearSession();
+  if(window.google && window.google.accounts && window.google.accounts.id)
+    window.google.accounts.id.disableAutoSelect();
   location.reload();
 }
 
@@ -2258,9 +2296,9 @@ function doLogout(){
   };
 })();
 
-// Enter no modal de login
+// Escape fecha o modal de login
 document.addEventListener('keydown', function(e){
-  if(e.key === 'Enter' && document.getElementById('lpLoginModal').classList.contains('show')) doLogin();
+  if(e.key === 'Escape' && document.getElementById('lpLoginModal').classList.contains('show')) hideLoginModal();
 });
 
 // ════════════════════════════════════════════════════════════════
@@ -2331,18 +2369,10 @@ function importarDados(){
   <div class="lp-login-box">
     <div class="lp-login-logo">
       <h2>🔒 Loss Prevention</h2>
-      <p>Acesse com suas credenciais</p>
+      <p>Acesse com sua conta Mercado Livre</p>
     </div>
-    <div class="lp-login-field">
-      <label>E-mail</label>
-      <input type="email" id="lpLoginEmail" placeholder="seu@email.com" autocomplete="username">
-    </div>
-    <div class="lp-login-field">
-      <label>Senha</label>
-      <input type="password" id="lpLoginSenha" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="lp-login-btn" onclick="doLogin()">Entrar</button>
-    <div class="lp-login-err" id="lpLoginErr">E-mail ou senha incorretos.</div>
+    <div id="googleSignInContainer" style="display:flex;justify-content:center;margin:8px 0 4px;min-height:44px;"></div>
+    <div class="lp-login-err" id="lpLoginErr">Acesso restrito ao domínio @mercadolibre.com.br</div>
     <span class="lp-login-skip" onclick="hideLoginModal()">Continuar como público</span>
   </div>
 </div>
