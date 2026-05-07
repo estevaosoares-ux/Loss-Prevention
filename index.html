@@ -991,7 +991,13 @@ body.is-mobile #mapa-info-card {
 // BACKEND LOCAL — substitui Google Apps Script
 // Dados em localStorage · Usuários em config.json
 // ════════════════════════════════════════════════════════════════
-var _lpConfig = null;
+var _lpConfig = {
+  gasWebAppUrl: '',
+  unidades: [
+    {nome:'CD São Paulo', lat:'-23.5505', lng:'-46.6333'},
+    {nome:'CD Cajamar', lat:'-23.3572', lng:'-46.8756'}
+  ]
+};
 
 var LP = {
   getData: function(){
