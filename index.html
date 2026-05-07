@@ -450,53 +450,6 @@ body.is-mobile #mapa-info-card {
   width: auto !important;
 }
 
-
-/* ══ LOGIN MODAL ══ */
-#lpLoginModal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
-#lpLoginModal.show{display:flex !important;}
-.lp-login-box{background:var(--card);border:1px solid rgba(245,196,0,0.35);border-radius:14px;padding:40px 36px;width:380px;max-width:92vw;box-shadow:0 0 40px rgba(245,196,0,0.08);}
-.lp-login-logo{text-align:center;margin-bottom:28px;}
-.lp-login-logo h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--yellow);}
-.lp-login-logo p{font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:4px;}
-.lp-login-field{margin-bottom:16px;}
-.lp-login-field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
-.lp-login-field input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:11px 14px;color:var(--text);font-size:14px;transition:border .2s;}
-.lp-login-field input:focus{outline:none;border-color:var(--yellow);}
-.lp-login-btn{width:100%;background:var(--yellow);color:#000;border:none;border-radius:7px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:6px;transition:background .15s;}
-.lp-login-btn:hover{background:var(--yellow2);}
-.lp-login-err{color:var(--red);font-size:12px;text-align:center;margin-top:12px;display:none;padding:8px;background:rgba(239,68,68,0.08);border-radius:6px;}
-.lp-login-err.show{display:block;}
-.lp-login-skip{display:block;text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;cursor:pointer;text-decoration:underline;}
-.lp-login-skip:hover{color:var(--text);}
-#btnEntrar{background:transparent;border:1px solid rgba(245,196,0,0.35);color:var(--yellow);padding:5px 13px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;display:none;transition:background .15s;}
-#btnEntrar:hover{background:rgba(245,196,0,0.1);}
-#btnSair{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);padding:4px 9px;border-radius:5px;font-size:10px;cursor:pointer;margin-left:6px;letter-spacing:1px;transition:all .15s;}
-#btnSair:hover{border-color:var(--red);color:var(--red);}
-#btnExport,#btnImport{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:10px;cursor:pointer;display:none;letter-spacing:.5px;transition:all .15s;}
-#btnExport:hover,#btnImport:hover{border-color:var(--yellow);color:var(--yellow);}
-#btnSettings{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:5px 10px;border-radius:5px;font-size:14px;cursor:pointer;display:none;transition:all .15s;line-height:1;}
-#btnSettings:hover{border-color:var(--yellow);color:var(--yellow);}
-/* ══ SETTINGS MODAL ══ */
-#lpSettingsModal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
-#lpSettingsModal.show{display:flex !important;}
-.lp-settings-box{background:var(--card);border:1px solid rgba(245,196,0,0.35);border-radius:14px;padding:36px;width:540px;max-width:95vw;box-shadow:0 0 40px rgba(245,196,0,0.08);}
-.lp-settings-box h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--yellow);margin-bottom:24px;}
-.lp-settings-field{margin-bottom:18px;}
-.lp-settings-field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
-.lp-settings-field input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:11px 14px;color:var(--text);font-size:13px;font-family:monospace;transition:border .2s;}
-.lp-settings-field input:focus{outline:none;border-color:var(--yellow);}
-.lp-settings-field small{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.5;}
-.lp-settings-row{display:flex;gap:10px;margin-top:4px;}
-.lp-settings-btn{flex:1;background:var(--yellow);color:#000;border:none;border-radius:7px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
-.lp-settings-btn:hover{background:var(--yellow2);}
-.lp-settings-btn.sec{background:transparent;border:1px solid var(--border2);color:var(--text-muted);}
-.lp-settings-btn.sec:hover{border-color:var(--yellow);color:var(--yellow);}
-.lp-settings-status{font-size:11px;padding:8px 12px;border-radius:6px;margin-top:10px;display:none;}
-.lp-settings-status.ok{display:block;background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
-.lp-settings-status.err{display:block;background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
-.lp-settings-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--text-muted);}
-.lp-settings-indicator.on{background:var(--green);box-shadow:0 0 6px var(--green);}
-.lp-settings-indicator.off{background:var(--red);}
 </style>
 </head>
 <body id="appBody">
@@ -566,13 +519,8 @@ body.is-mobile #mapa-info-card {
     <div class="user-badge" id="userBadge" style="display:none">
       <span id="userEmail" style="font-size:11px;color:var(--text-muted)"></span>
       <span class="user-badge-role" id="userRoleBadge"></span>
-      <button id="btnSair" onclick="doLogout()">Sair</button>
     </div>
-    <button id="btnEntrar" onclick="showLoginModal()">Entrar</button>
-    <button id="btnSettings" onclick="showSettingsModal()" title="Configurações">⚙</button>
-    <button id="btnExport" onclick="exportarDados()" title="Exportar dados">⬇ Backup</button>
-    <button id="btnImport" onclick="importarDados()" title="Importar dados">⬆ Restaurar</button>
-    <span class="topbar-badge" id="conexaoBadge">🟢 Sistema Ativo</span>
+    <span class="topbar-badge">🟢 Sistema Ativo</span>
   </div>
 </div>
 
@@ -710,14 +658,14 @@ body.is-mobile #mapa-info-card {
       <div class="form-card"><div class="form-section-label">Selos Solicitados</div>
         <div class="check-group">
           <label class="check-item"><input type="checkbox" name="seloCel"> SELO CEL</label>
-          <label class="check-item"><input type="checkbox" name="seloCarregCel"> SELO CARREG CEL</label>
-          <label class="check-item"><input type="checkbox" name="seloNotebook"> SELO NOTEBOOK</label>
-          <label class="check-item"><input type="checkbox" name="seloCarregNotebook"> SELO CARREG NOTEBOOK</label>
-          <label class="check-item"><input type="checkbox" name="seloCapaCel"> SELO CAPA CEL</label>
-          <label class="check-item"><input type="checkbox" name="seloPenDriver"> SELO PEN DRIVER</label>
-          <label class="check-item"><input type="checkbox" name="seloMouse"> SELO MOUSE</label>
-          <label class="check-item"><input type="checkbox" name="seloFone"> SELO FONE DE OUVIDO</label>
-          <label class="check-item"><input type="checkbox" name="seloTeclado"> SELO TECLADO</label>
+          <label class="check-item"><input type="checkbox" name="seloCarregCel"> CARREG CEL</label>
+          <label class="check-item"><input type="checkbox" name="seloNotebook"> NOTEBOOK</label>
+          <label class="check-item"><input type="checkbox" name="seloCarregNotebook"> CARREG NOTEBOOK</label>
+          <label class="check-item"><input type="checkbox" name="seloCapaCel"> CAPA CEL</label>
+          <label class="check-item"><input type="checkbox" name="seloPenDriver"> PEN DRIVER</label>
+          <label class="check-item"><input type="checkbox" name="seloMouse"> MOUSE</label>
+          <label class="check-item"><input type="checkbox" name="seloFone"> FONE DE OUVIDO</label>
+          <label class="check-item"><input type="checkbox" name="seloTeclado"> TECLADO</label>
           <label class="check-item"><input type="checkbox" name="seloOutros"> OUTROS</label>
         </div>
       </div>
@@ -1047,140 +995,6 @@ body.is-mobile #mapa-info-card {
 
 
 <script>
-
-// ════════════════════════════════════════════════════════════════
-// BACKEND LOCAL — substitui Google Apps Script
-// Dados em localStorage · Usuários em config.json
-// ════════════════════════════════════════════════════════════════
-var _lpConfig = null;
-
-var LP = {
-  getData: function(){
-    try{ return JSON.parse(localStorage.getItem('lp_data') || '{}'); }catch(e){ return {}; }
-  },
-  saveData: function(d){
-    try{ localStorage.setItem('lp_data', JSON.stringify(d)); }
-    catch(e){ alert('Armazenamento cheio. Exporte e limpe os dados antes de continuar.'); }
-  },
-  getSession: function(){
-    try{ return JSON.parse(sessionStorage.getItem('lp_session') || 'null'); }catch(e){ return null; }
-  },
-  saveSession: function(s){ sessionStorage.setItem('lp_session', JSON.stringify(s)); },
-  clearSession: function(){ sessionStorage.removeItem('lp_session'); }
-};
-
-var GAS_IMPL = {
-
-  // ── Autenticação: sempre local via config.json ──────────────────
-  iniciarApp: function(){
-    var cfg = _lpConfig || {users:[], unidades:[]};
-    var allU = (cfg.unidades || []).map(function(u){ return u.nome || u; });
-    var sess = LP.getSession();
-    if(sess && sess.email){
-      var found = null;
-      (cfg.users || []).forEach(function(u){ if(u.email === sess.email) found = u; });
-      if(found) return {permissao: found.permissao, email: found.email, unidadesUsuario: found.unidades || [], unidades: allU};
-    }
-    return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
-  },
-
-  // ── Chamada HTTP ao GAS Web App ─────────────────────────────────
-  _post: function(payload){
-    var url = (_lpConfig && _lpConfig.gasWebAppUrl) || '';
-    if(!url) return Promise.reject('gasWebAppUrl não configurada. Vá em Configurações e cole a URL do Web App.');
-    return fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    }).then(function(r){
-      if(!r.ok) throw new Error('Erro HTTP ' + r.status);
-      return r.json();
-    }).then(function(data){
-      if(data && data.error) throw new Error(data.error);
-      return data;
-    });
-  },
-
-  // ── Dados: Sheets se URL configurada, localStorage como fallback ─
-  lerBase: function(tipo, unidades){
-    if(_lpConfig && _lpConfig.gasWebAppUrl){
-      return GAS_IMPL._post({action:'lerBase', tipo:tipo, unidades:unidades||[]});
-    }
-    var all = LP.getData(), records = all[tipo] || [];
-    if(!unidades || !unidades.length) return records;
-    return records.filter(function(r){
-      return (unidades.indexOf(r['UNIDADE']||r['Unidade']||'')) !== -1;
-    });
-  },
-
-  atualizarRegistro: function(tipo, updated){
-    if(_lpConfig && _lpConfig.gasWebAppUrl){
-      return GAS_IMPL._post({action:'atualizarRegistro', tipo:tipo, updated:updated});
-    }
-    var all = LP.getData(), records = all[tipo] || [], idx = -1;
-    for(var i=0;i<records.length;i++){ if(records[i]['ID']===updated['ID']){idx=i;break;} }
-    if(idx>=0) records[idx]=updated; else records.push(updated);
-    all[tipo]=records; LP.saveData(all);
-    return {ok:true};
-  },
-
-  salvarRegistro: function(tipo, dados){
-    if(_lpConfig && _lpConfig.gasWebAppUrl){
-      return GAS_IMPL._post({action:'salvarRegistro', tipo:tipo, dados:dados});
-    }
-    var all = LP.getData(), records = all[tipo] || [];
-    var pfx = {selo:'SEL',cracha:'CRA',investigacao:'INV',cadeado:'CAD',cartao:'CAR',disciplinar:'DIS',ronda:'RON',bau:'BAU',pacote:'PAC',lacre:'LAC',acesso:'ACE'}[tipo]||tipo.slice(0,3).toUpperCase();
-    var id = pfx+'-'+String(records.length+1).padStart(4,'0');
-    var now=new Date(), d=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear(), h=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    var rec={ID:id,DATA:d,HORA:h,STATUS:'Pendente'};
-    Object.keys(dados).forEach(function(k){rec[k]=dados[k];});
-    records.push(rec); all[tipo]=records; LP.saveData(all);
-    return {id:id};
-  },
-
-  lerUnidadesComCoordenadas: function(){
-    if(_lpConfig && _lpConfig.gasWebAppUrl){
-      return GAS_IMPL._post({action:'lerUnidades'});
-    }
-    return (_lpConfig&&_lpConfig.unidades||[]).filter(function(u){return u.lat&&u.lng;});
-  }
-};
-
-function _makeGasProxy(s, f){
-  var _s = s || function(){}, _f = f || function(){};
-  var p = {
-    withSuccessHandler: function(fn){ _s = fn; return p; },
-    withFailureHandler: function(fn){ _f = fn; return p; }
-  };
-  ['iniciarApp','lerBase','atualizarRegistro','salvarRegistro','lerUnidadesComCoordenadas'].forEach(function(m){
-    p[m] = function(){
-      var a = Array.prototype.slice.call(arguments), s = _s, f = _f;
-      _s = function(){}; _f = function(){};
-      try {
-        var result = GAS_IMPL[m].apply(null, a);
-        if(result && typeof result.then === 'function'){
-          // Resultado assíncrono (fetch ao Sheets)
-          result.then(function(d){ if(s) s(d); }).catch(function(e){ if(f) f(String(e)); });
-        } else {
-          // Resultado síncrono (localStorage / iniciarApp)
-          setTimeout(function(){ if(s) s(result); }, 10);
-        }
-      } catch(e){
-        setTimeout(function(){ if(f) f(String(e)); }, 10);
-      }
-    };
-  });
-  return p;
-}
-
-var google = {
-  script: {
-    run: {
-      withSuccessHandler: function(fn){ return _makeGasProxy(fn, null); },
-      withFailureHandler: function(fn){ return _makeGasProxy(null, fn); }
-    }
-  }
-};
-
 // ══ TABS ══
 const tabTitles={solicitacoes:'Solicitações',bases:'Gestão LP',seguranca:'Security',controle:'Controle de Acesso',mapa:'Mapa Meli'};
 document.getElementById('btn-sol').addEventListener('click',()=>switchTab('solicitacoes','btn-sol'));
@@ -1641,141 +1455,6 @@ function preencherSelectsUnidade(unidades){
   });
 }
 
-// ══ OPÇÕES CUSTOMIZADAS (setor / empresa / cargo) ══
-var _lpOpts = {setor:[], empresa:[], cargo:[]};
-
-function _loadLpOpts(){
-  try{ var s=localStorage.getItem('lp_opts'); if(s) _lpOpts=JSON.parse(s); }catch(e){}
-  ['setor','empresa','cargo'].forEach(function(k){ if(!Array.isArray(_lpOpts[k])) _lpOpts[k]=[]; });
-}
-
-function _saveLpOpt(tipo, valor){
-  valor = String(valor).trim().toUpperCase();
-  if(!valor) return valor;
-  _loadLpOpts();
-  if(_lpOpts[tipo].indexOf(valor)===-1){
-    _lpOpts[tipo].push(valor);
-    _lpOpts[tipo].sort();
-    try{ localStorage.setItem('lp_opts', JSON.stringify(_lpOpts)); }catch(e){}
-  }
-  return valor;
-}
-
-function _addOptToSelect(sel, valor){
-  var addOpt = sel.querySelector('option[value="__add__"]');
-  if(!Array.from(sel.options).find(function(o){ return o.value===valor; })){
-    var opt = document.createElement('option');
-    opt.value = valor; opt.textContent = valor;
-    sel.insertBefore(opt, addOpt);
-  }
-  sel.value = valor;
-}
-
-(function _initOpcoesCustom(){
-  _loadLpOpts();
-
-  // ── Setor ──
-  var selSetor = document.getElementById('sel-setor-selo');
-  if(selSetor){
-    var addOptSetor = selSetor.querySelector('option[value="__add__"]');
-    _lpOpts.setor.forEach(function(s){
-      var o=document.createElement('option'); o.value=s; o.textContent=s;
-      selSetor.insertBefore(o, addOptSetor);
-    });
-    selSetor.addEventListener('change', function(){
-      if(this.value==='__add__'){
-        document.getElementById('add-setor-box').style.display='flex';
-        document.getElementById('add-setor-input').focus();
-      }
-    });
-    document.getElementById('add-setor-ok').addEventListener('click', function(){
-      var v = document.getElementById('add-setor-input').value.trim().toUpperCase();
-      if(!v) return;
-      _saveLpOpt('setor', v);
-      _addOptToSelect(selSetor, v);
-      document.getElementById('add-setor-box').style.display='none';
-      document.getElementById('add-setor-input').value='';
-    });
-    document.getElementById('add-setor-input').addEventListener('keydown', function(e){
-      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-setor-ok').click(); }
-      if(e.key==='Escape'){ document.getElementById('add-setor-cancel').click(); }
-    });
-    document.getElementById('add-setor-cancel').addEventListener('click', function(){
-      selSetor.value='';
-      document.getElementById('add-setor-box').style.display='none';
-      document.getElementById('add-setor-input').value='';
-    });
-  }
-
-  // ── Cargo ──
-  var selCargo = document.getElementById('sel-cargo-selo');
-  if(selCargo){
-    var addOptCargo = selCargo.querySelector('option[value="__add__"]');
-    _lpOpts.cargo.forEach(function(s){
-      var o=document.createElement('option'); o.value=s; o.textContent=s;
-      selCargo.insertBefore(o, addOptCargo);
-    });
-    selCargo.addEventListener('change', function(){
-      if(this.value==='__add__'){
-        document.getElementById('add-cargo-box').style.display='flex';
-        document.getElementById('add-cargo-input').focus();
-      }
-    });
-    document.getElementById('add-cargo-ok').addEventListener('click', function(){
-      var v = document.getElementById('add-cargo-input').value.trim().toUpperCase();
-      if(!v) return;
-      _saveLpOpt('cargo', v);
-      _addOptToSelect(selCargo, v);
-      document.getElementById('add-cargo-box').style.display='none';
-      document.getElementById('add-cargo-input').value='';
-    });
-    document.getElementById('add-cargo-input').addEventListener('keydown', function(e){
-      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-cargo-ok').click(); }
-      if(e.key==='Escape'){ document.getElementById('add-cargo-cancel').click(); }
-    });
-    document.getElementById('add-cargo-cancel').addEventListener('click', function(){
-      selCargo.value='';
-      document.getElementById('add-cargo-box').style.display='none';
-      document.getElementById('add-cargo-input').value='';
-    });
-  }
-
-  // ── Empresa (combobox) ──
-  var inpEmpresa = document.getElementById('inp-empresa-selo');
-  var ddEmpresa  = document.getElementById('dd-empresa-selo');
-  if(inpEmpresa && ddEmpresa){
-    function renderEmpresaDd(filter){
-      var items = _lpOpts.empresa.filter(function(e){
-        return !filter || e.indexOf(filter.toUpperCase())!==-1;
-      });
-      if(!items.length){ ddEmpresa.classList.remove('open'); return; }
-      ddEmpresa.innerHTML = items.map(function(e){
-        return '<div class="combo-dd-item" data-val="'+e+'">'+e+'</div>';
-      }).join('');
-      ddEmpresa.classList.add('open');
-      ddEmpresa.querySelectorAll('.combo-dd-item').forEach(function(el){
-        el.addEventListener('click', function(){
-          inpEmpresa.value = this.dataset.val;
-          ddEmpresa.classList.remove('open');
-        });
-      });
-    }
-    inpEmpresa.addEventListener('input', function(){ renderEmpresaDd(this.value); });
-    inpEmpresa.addEventListener('focus', function(){ renderEmpresaDd(this.value); });
-    document.addEventListener('click', function(e){
-      if(!inpEmpresa.contains(e.target) && !ddEmpresa.contains(e.target))
-        ddEmpresa.classList.remove('open');
-    });
-    document.getElementById('btn-save-empresa').addEventListener('click', function(){
-      var v = inpEmpresa.value.trim().toUpperCase();
-      if(!v) return;
-      inpEmpresa.value = v;
-      _saveLpOpt('empresa', v);
-      _loadLpOpts();
-    });
-  }
-})();
-
 // ══ PERMISSÕES ══
 // Administrador → todas as abas + só suas unidades
 // Usuario       → Security + Solicitações + só suas unidades
@@ -1884,34 +1563,10 @@ function _onAuthFail(err) {
 
 // Login manual removido — app abre direto
 
-// Carrega config.json e então inicia app
-(function _bootstrapApp(){
-  fetch('./config.json?t=' + Date.now())
-    .then(function(r){ return r.ok ? r.json() : Promise.reject('not found'); })
-    .then(function(cfg){
-      _lpConfig = cfg;
-      try{ localStorage.setItem('lp_config', JSON.stringify(cfg)); }catch(e){}
-    })
-    .catch(function(){
-      var c = localStorage.getItem('lp_config');
-      if(c){ try{ _lpConfig = JSON.parse(c); }catch(e){} }
-      if(!_lpConfig) _lpConfig = {
-        users: [{email:'admin@local', senha:'admin123', permissao:'Administrador', unidades:[]}],
-        unidades: []
-      };
-    })
-    .finally(function(){
-      // Se config.json não tiver URL mas o admin salvou manualmente, restaura
-      if(_lpConfig && !_lpConfig.gasWebAppUrl){
-        var saved = localStorage.getItem('lp_webAppUrl');
-        if(saved) _lpConfig.gasWebAppUrl = saved;
-      }
-      google.script.run
-        .withSuccessHandler(_onAuthSuccess)
-        .withFailureHandler(_onAuthFail)
-        .iniciarApp();
-    });
-})();
+google.script.run
+  .withSuccessHandler(_onAuthSuccess)
+  .withFailureHandler(_onAuthFail)
+  .iniciarApp();
 
 // ══════════════════════════════════════════════════════════
 // SISTEMA DE FILTRO AVANÇADO
@@ -2252,7 +1907,7 @@ function _renderizarMapa(unidades) {
         '<div style="padding:14px 16px;border-bottom:1px solid rgba(245,196,0,0.1);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--yellow);">📍 Unidades (' + unidades.length + ')</div>' +
         unidades.map(function(u, i) {
           return '<button onclick="focarUnidade(' + i + ')" style="text-align:left;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:12px 16px;cursor:pointer;transition:background .15s;width:100%;" ' +
-            'onmouseover="this.style.background=\'rgba(245,196,0,0.07)\'" onmouseout="this.style.background=\'none\'" ' +
+            'onmouseover="this.style.background='rgba(245,196,0,0.07)'" onmouseout="this.style.background='none'" ' +
             'id="lista-item-' + i + '">' +
             '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);margin-bottom:2px;">' + (u.unidade || '—') + '</div>' +
             '<div style="font-size:10px;color:var(--text-muted);">' + u.lat + ', ' + u.lng + '</div>' +
@@ -2361,188 +2016,129 @@ function _mostrarInfoCard(u) {
   card.style.display = 'block';
 }
 
-// ════════════════════════════════════════════════════════════════
-// CONFIGURAÇÕES — URL do GAS Web App
-// ════════════════════════════════════════════════════════════════
-function showSettingsModal(){
-  var url = (_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '';
-  document.getElementById('settingsWebAppUrl').value = url;
-  _atualizarStatusConexao(url);
-  document.getElementById('lpSettingsModal').classList.add('show');
+// ══ OPÇÕES CUSTOMIZADAS (setor / empresa / cargo) ══
+var _lpOpts = {setor:[], empresa:[], cargo:[]};
+function _loadLpOpts(){
+  try{ var s=localStorage.getItem('lp_opts'); if(s) _lpOpts=JSON.parse(s); }catch(e){}
+  ['setor','empresa','cargo'].forEach(function(k){ if(!Array.isArray(_lpOpts[k])) _lpOpts[k]=[]; });
 }
-function hideSettingsModal(){
-  document.getElementById('lpSettingsModal').classList.remove('show');
-}
-function salvarSettings(){
-  var url = document.getElementById('settingsWebAppUrl').value.trim();
-  if(_lpConfig) _lpConfig.gasWebAppUrl = url;
-  localStorage.setItem('lp_webAppUrl', url);
-  _atualizarStatusConexao(url);
-  hideSettingsModal();
-  if(url) {
-    showSuccess('URL salva! Recarregando dados...');
-    setTimeout(function(){ location.reload(); }, 1200);
+function _saveLpOpt(tipo, valor){
+  valor = String(valor).trim().toUpperCase();
+  if(!valor) return;
+  _loadLpOpts();
+  if(_lpOpts[tipo].indexOf(valor)===-1){
+    _lpOpts[tipo].push(valor);
+    _lpOpts[tipo].sort();
+    try{ localStorage.setItem('lp_opts', JSON.stringify(_lpOpts)); }catch(e){}
   }
 }
-function testarConexao(){
-  var url = document.getElementById('settingsWebAppUrl').value.trim();
-  if(!url){ document.getElementById('settingsStatus').className='lp-settings-status err'; document.getElementById('settingsStatus').textContent='⚠ Cole a URL do Web App primeiro.'; return; }
-  var el = document.getElementById('settingsStatus');
-  el.className='lp-settings-status ok'; el.textContent='⏳ Testando conexão...';
-  fetch(url, {method:'POST', body: JSON.stringify({action:'lerUnidades'})})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.error){ el.className='lp-settings-status err'; el.textContent='✗ Erro da planilha: ' + d.error; }
-      else { el.className='lp-settings-status ok'; el.textContent='✓ Conexão OK! ' + (Array.isArray(d) ? d.length + ' unidade(s) encontrada(s).' : 'Planilha respondeu.'); }
-    })
-    .catch(function(e){ el.className='lp-settings-status err'; el.textContent='✗ Falha de rede: ' + String(e) + ' — Verifique se o Web App está implantado como "Anyone".'; });
-}
-function _atualizarStatusConexao(url){
-  var badge = document.getElementById('conexaoBadge');
-  if(!badge) return;
-  if(url){ badge.innerHTML='🟢 Sheets Conectado'; badge.style.color='var(--green)'; }
-  else    { badge.innerHTML='🟡 Modo Local';      badge.style.color='var(--yellow)'; }
-}
-
-// ════════════════════════════════════════════════════════════════
-// LOGIN / LOGOUT
-// ════════════════════════════════════════════════════════════════
-function showLoginModal(){
-  var modal = document.getElementById('lpLoginModal');
-  if(modal) modal.classList.add('show');
-  setTimeout(function(){ var e = document.getElementById('lpLoginEmail'); if(e) e.focus(); }, 80);
-}
-function hideLoginModal(){
-  document.getElementById('lpLoginModal').classList.remove('show');
-  document.getElementById('lpLoginErr').classList.remove('show');
-}
-function doLogin(){
-  var email = (document.getElementById('lpLoginEmail').value || '').trim().toLowerCase();
-  var senha = document.getElementById('lpLoginSenha').value || '';
-  var cfg   = _lpConfig || {users:[]};
-  var user  = null;
-  (cfg.users || []).forEach(function(u){
-    if((u.email || '').toLowerCase() === email && u.senha === senha) user = u;
-  });
-  if(!user){ document.getElementById('lpLoginErr').classList.add('show'); return; }
-  LP.saveSession({email: user.email});
-  hideLoginModal();
-  document.getElementById('authLoading').style.display = 'flex';
-  google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
-}
-function doLogout(){
-  LP.clearSession();
-  location.reload();
+function _addOptToSelect(sel, valor){
+  valor = String(valor).trim().toUpperCase();
+  if(!valor) return;
+  var exists = false;
+  for(var i=0;i<sel.options.length;i++){
+    if(sel.options[i].value===valor){ exists=true; break; }
+  }
+  if(!exists){
+    var opt = document.createElement('option');
+    opt.value = valor; opt.textContent = valor;
+    var addIdx = -1;
+    for(var j=0;j<sel.options.length;j++){
+      if(sel.options[j].value==='__add__'){ addIdx=j; break; }
+    }
+    if(addIdx>=0) sel.insertBefore(opt, sel.options[addIdx]);
+    else sel.appendChild(opt);
+  }
+  sel.value = valor;
 }
 
-// ════════════════════════════════════════════════════════════════
-// BOTÕES ENTRAR / SAIR / BACKUP — sincronizados com permissão
-// ════════════════════════════════════════════════════════════════
-(function(){
-  var _orig = window.aplicarPermissoes;
-  window.aplicarPermissoes = function(permissao, unidadesArr, email){
-    _orig(permissao, unidadesArr, email);
-    var bE   = document.getElementById('btnEntrar');
-    var bS   = document.getElementById('btnSair');
-    var bExp = document.getElementById('btnExport');
-    var bImp = document.getElementById('btnImport');
-    var bSet = document.getElementById('btnSettings');
-    if(bE)   bE.style.display   = (permissao === 'publico' && !email) ? 'inline-block' : 'none';
-    if(bS)   bS.style.display   = (email && permissao !== 'publico')  ? 'inline-block' : 'none';
-    if(bSet) bSet.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
-    if(bExp) bExp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
-    if(bImp) bImp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
-    _atualizarStatusConexao((_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '');
-  };
+(function _initOpcoesCustom(){
+  _loadLpOpts();
+
+  // ── Setor ──
+  var selSetor = document.getElementById('sel-setor-selo');
+  if(selSetor){
+    _lpOpts.setor.forEach(function(s){ _addOptToSelect(selSetor, s); });
+    selSetor.addEventListener('change', function(){
+      if(this.value==='__add__'){
+        document.getElementById('add-setor-box').style.display='flex';
+        document.getElementById('add-setor-input').focus();
+      }
+    });
+    document.getElementById('add-setor-ok').addEventListener('click', function(){
+      var v = document.getElementById('add-setor-input').value.trim().toUpperCase();
+      if(v){ _saveLpOpt('setor', v); _addOptToSelect(selSetor, v); }
+      document.getElementById('add-setor-box').style.display='none';
+      document.getElementById('add-setor-input').value='';
+    });
+    document.getElementById('add-setor-input').addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-setor-ok').click(); }
+      if(e.key==='Escape'){ document.getElementById('add-setor-cancel').click(); }
+    });
+    document.getElementById('add-setor-cancel').addEventListener('click', function(){
+      selSetor.value='';
+      document.getElementById('add-setor-box').style.display='none';
+      document.getElementById('add-setor-input').value='';
+    });
+  }
+
+  // ── Cargo ──
+  var selCargo = document.getElementById('sel-cargo-selo');
+  if(selCargo){
+    _lpOpts.cargo.forEach(function(s){ _addOptToSelect(selCargo, s); });
+    selCargo.addEventListener('change', function(){
+      if(this.value==='__add__'){
+        document.getElementById('add-cargo-box').style.display='flex';
+        document.getElementById('add-cargo-input').focus();
+      }
+    });
+    document.getElementById('add-cargo-ok').addEventListener('click', function(){
+      var v = document.getElementById('add-cargo-input').value.trim().toUpperCase();
+      if(v){ _saveLpOpt('cargo', v); _addOptToSelect(selCargo, v); }
+      document.getElementById('add-cargo-box').style.display='none';
+      document.getElementById('add-cargo-input').value='';
+    });
+    document.getElementById('add-cargo-input').addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-cargo-ok').click(); }
+      if(e.key==='Escape'){ document.getElementById('add-cargo-cancel').click(); }
+    });
+    document.getElementById('add-cargo-cancel').addEventListener('click', function(){
+      selCargo.value='';
+      document.getElementById('add-cargo-box').style.display='none';
+      document.getElementById('add-cargo-input').value='';
+    });
+  }
+
+  // ── Empresa (combobox) ──
+  var inpEmpresa = document.getElementById('inp-empresa-selo');
+  var ddEmpresa  = document.getElementById('dd-empresa-selo');
+  if(inpEmpresa && ddEmpresa){
+    function renderDdEmpresa(filter){
+      var items = _lpOpts.empresa.filter(function(e){
+        return !filter || e.toLowerCase().indexOf(filter.toLowerCase())!==-1;
+      });
+      ddEmpresa.innerHTML = items.map(function(e){
+        return '<div class="combo-dd-item">'+e+'</div>';
+      }).join('');
+      ddEmpresa.classList.toggle('open', items.length>0);
+      ddEmpresa.querySelectorAll('.combo-dd-item').forEach(function(el){
+        el.addEventListener('mousedown', function(ev){
+          ev.preventDefault();
+          inpEmpresa.value = el.textContent;
+          ddEmpresa.classList.remove('open');
+        });
+      });
+    }
+    inpEmpresa.addEventListener('input', function(){ renderDdEmpresa(this.value); });
+    inpEmpresa.addEventListener('focus', function(){ renderDdEmpresa(this.value); });
+    inpEmpresa.addEventListener('blur',  function(){ setTimeout(function(){ ddEmpresa.classList.remove('open'); }, 150); });
+    document.getElementById('btn-save-empresa').addEventListener('click', function(){
+      var v = inpEmpresa.value.trim().toUpperCase();
+      if(v){ _saveLpOpt('empresa', v); _loadLpOpts(); inpEmpresa.value=v; }
+    });
+  }
 })();
 
-// Enter no modal de login
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Enter' && document.getElementById('lpLoginModal').classList.contains('show')) doLogin();
-});
-
-// ════════════════════════════════════════════════════════════════
-// EXPORTAR / IMPORTAR DADOS (backup localStorage)
-// ════════════════════════════════════════════════════════════════
-function exportarDados(){
-  var data = LP.getData();
-  var json = JSON.stringify(data, null, 2);
-  var blob = new Blob([json], {type: 'application/json'});
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href = url;
-  a.download = 'lp-backup-' + new Date().toISOString().split('T')[0] + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-function importarDados(){
-  var inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.json';
-  inp.onchange = function(e){
-    var f = e.target.files[0]; if(!f) return;
-    var r = new FileReader();
-    r.onload = function(ev){
-      try{
-        var data = JSON.parse(ev.target.result);
-        if(confirm('Isso vai SUBSTITUIR todos os dados atuais. Continuar?')){
-          LP.saveData(data);
-          location.reload();
-        }
-      }catch(err){ alert('Arquivo inválido: ' + err.message); }
-    };
-    r.readAsText(f);
-  };
-  inp.click();
-}
-
-
 </script>
-
-<!-- ══ SETTINGS MODAL ══ -->
-<div id="lpSettingsModal">
-  <div class="lp-settings-box">
-    <h2>⚙ Configurações</h2>
-    <div class="lp-settings-field">
-      <label><span class="lp-settings-indicator" id="connIndicator"></span>URL do GAS Web App (Google Sheets)</label>
-      <input type="url" id="settingsWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
-      <small>
-        Implante o <strong>backend.gs</strong> no <a href="https://script.google.com" target="_blank" style="color:var(--yellow)">Google Apps Script</a>
-        como Web App (Execute as: Me · Who has access: Anyone) e cole a URL aqui.<br>
-        Deixe em branco para usar armazenamento local (localStorage).
-      </small>
-    </div>
-    <div id="settingsStatus" class="lp-settings-status"></div>
-    <div class="lp-settings-row" style="margin-top:16px;">
-      <button class="lp-settings-btn sec" onclick="testarConexao()">Testar conexão</button>
-      <button class="lp-settings-btn" onclick="salvarSettings()">Salvar</button>
-    </div>
-    <div style="text-align:right;margin-top:12px;">
-      <span onclick="hideSettingsModal()" style="font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">Fechar</span>
-    </div>
-  </div>
-</div>
-
-<!-- ══ LOGIN MODAL ══ -->
-<div id="lpLoginModal">
-  <div class="lp-login-box">
-    <div class="lp-login-logo">
-      <h2>🔒 Loss Prevention</h2>
-      <p>Acesse com suas credenciais</p>
-    </div>
-    <div class="lp-login-field">
-      <label>E-mail</label>
-      <input type="email" id="lpLoginEmail" placeholder="seu@email.com" autocomplete="username">
-    </div>
-    <div class="lp-login-field">
-      <label>Senha</label>
-      <input type="password" id="lpLoginSenha" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="lp-login-btn" onclick="doLogin()">Entrar</button>
-    <div class="lp-login-err" id="lpLoginErr">E-mail ou senha incorretos.</div>
-    <span class="lp-login-skip" onclick="hideLoginModal()">Continuar como público</span>
-  </div>
-</div>
 </body>
 </html>
