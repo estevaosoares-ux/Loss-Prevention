@@ -44,6 +44,9 @@ function doPost(e) {
     else if (action === 'salvarRegistro')    result = salvarRegistro(payload.tipo, payload.dados);
     else if (action === 'atualizarRegistro') result = atualizarRegistro(payload.tipo, payload.updated);
     else if (action === 'lerUnidades')       result = lerUnidadesComCoordenadas();
+    else if (action === 'getUnidades')       result = getUnidades();
+    else if (action === 'getOpcoesCustom')   result = getOpcoesCustom();
+    else if (action === 'salvarOpcaoCustom') result = salvarOpcaoCustom(payload.tipo, payload.valor);
     else                                     result = {error: 'action desconhecida: ' + action};
   } catch(err) {
     result = {error: err.toString()};
@@ -183,6 +186,49 @@ function atualizarRegistro(tipo, updated) {
   }
 
   return {error: 'ID não encontrado: ' + targetId};
+}
+
+// ── Retorna lista de nomes de unidades (col D da aba UNIDADES) ───
+function getUnidades() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('UNIDADES');
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  var headers = data[0].map(String);
+  var colIdx  = headers.indexOf('NOME');
+  if (colIdx === -1) colIdx = 3; // fallback: col D (index 3)
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    var v = String(data[i][colIdx] || '').trim();
+    if (v) result.push(v);
+  }
+  return result;
+}
+
+// ── Retorna opções customizadas salvas (empresa/setor/cargo) ─────
+function getOpcoesCustom() {
+  var props = PropertiesService.getScriptProperties();
+  var raw   = props.getProperty('lp_opts');
+  if (!raw) return {setor:[], empresa:[], cargo:[]};
+  try { return JSON.parse(raw); } catch(e) { return {setor:[], empresa:[], cargo:[]}; }
+}
+
+// ── Salva nova opção customizada em MAIÚSCULO ────────────────────
+function salvarOpcaoCustom(tipo, valor) {
+  valor = String(valor).trim().toUpperCase();
+  if (!valor) return {ok:false};
+  var props = PropertiesService.getScriptProperties();
+  var raw   = props.getProperty('lp_opts');
+  var opts  = {setor:[], empresa:[], cargo:[]};
+  try { if(raw) opts = JSON.parse(raw); } catch(e){}
+  if (!Array.isArray(opts[tipo])) opts[tipo] = [];
+  if (opts[tipo].indexOf(valor) === -1) {
+    opts[tipo].push(valor);
+    opts[tipo].sort();
+  }
+  props.setProperty('lp_opts', JSON.stringify(opts));
+  return {ok:true, valor:valor};
 }
 
 // ── Lê unidades com coordenadas (aba UNIDADES) ───────────────────

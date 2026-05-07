@@ -136,6 +136,23 @@ textarea{resize:vertical;min-height:85px;}
 .btn-secondary{background:transparent;color:var(--text-muted);border:1px solid var(--border2);padding:14px 24px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .btn-secondary:hover{border-color:var(--yellow);color:var(--text);}
 
+/* ══ COMBOBOX EMPRESA ══ */
+.combo-wrap{position:relative;display:flex;gap:8px;align-items:flex-start;}
+.combo-wrap .combo-input{flex:1;}
+.combo-dd{position:absolute;top:calc(100% + 2px);left:0;right:44px;background:#111;border:1px solid var(--border2);border-radius:6px;max-height:180px;overflow-y:auto;z-index:600;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.combo-dd.open{display:block;}
+.combo-dd-item{padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text);transition:background .15s;}
+.combo-dd-item:hover{background:var(--yellow-dim);color:var(--yellow);}
+.btn-add-opt{background:rgba(245,196,0,0.1);border:1px solid rgba(245,196,0,0.3);color:var(--yellow);min-width:36px;height:38px;border-radius:6px;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;padding:0;}
+.btn-add-opt:hover{background:rgba(245,196,0,0.2);}
+/* Linha de adicionar novo setor/cargo */
+.add-opt-row{display:flex;gap:6px;margin-top:6px;}
+.add-opt-row input{flex:1;font-size:12px;padding:8px 12px;}
+.add-opt-row .add-opt-confirm{background:rgba(34,197,94,0.2);color:var(--green);border:1px solid rgba(34,197,94,0.35);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;}
+.add-opt-row .add-opt-cancel{background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px;transition:all .2s;}
+.add-opt-row .add-opt-confirm:hover{background:rgba(34,197,94,0.35);}
+.add-opt-row .add-opt-cancel:hover{background:rgba(255,255,255,0.1);}
+
 /* ══ DETAIL VIEW ══ */
 .detail-view{display:none;}
 .detail-view.active{display:block;animation:fadeUp .25s ease;}
@@ -640,28 +657,71 @@ body.is-mobile #mapa-info-card {
   <!-- FORM SELO -->
   <div class="form-page" id="form-selo">
     <div class="form-back"><button class="back-btn" data-home="sol">← Voltar</button><div class="form-title-h">Solicitação de <span>Selo</span></div></div>
-    <form data-tipo="Solicitação de Selo"><div class="form-card"><div class="form-section-label">Identificação</div><div class="field-grid">
-      <div class="field"><label>Unidade <span class="req">*</span></label><select name="unidade" class="sel-unidade" required><option value="">Selecione...</option></select></div>
-      <div class="field"><label>Data <span class="req">*</span></label><input type="date" name="data" required></div>
-      <div class="field"><label>Nome Completo <span class="req">*</span></label><input type="text" name="nome" required></div>
-      <div class="field"><label>LDAP <span class="req">*</span></label><input type="text" name="ldap" required></div>
-      <div class="field"><label>Setor Solicitante</label><input type="text" name="setor"></div>
-      <div class="field"><label>Empresa <span class="req">*</span></label><input type="text" name="empresa" required></div>
-      <div class="field"><label>Cargo / Função</label><input type="text" name="cargo"></div>
-      <div class="field"><label>E-mail do Gestor <span class="req">*</span></label><input type="email" name="emailGestor" required></div>
-      <div class="field field-full"><label>Motivo <span class="req">*</span></label><textarea name="motivo" required></textarea></div>
-    </div></div>
-    <div class="form-card"><div class="form-section-label">Selos Solicitados</div>
-      <div class="check-group">
-        <label class="check-item"><input type="checkbox" name="seloCel"> Celular</label>
-        <label class="check-item"><input type="checkbox" name="seloNotebook"> Notebook</label>
-        <label class="check-item"><input type="checkbox" name="seloMouse"> Mouse</label>
-        <label class="check-item"><input type="checkbox" name="seloFone"> Fone de Ouvido</label>
-        <label class="check-item"><input type="checkbox" name="seloTeclado"> Teclado</label>
+    <form data-tipo="Solicitação de Selo">
+      <div class="form-card"><div class="form-section-label">Identificação</div><div class="field-grid">
+        <div class="field"><label>Unidade <span class="req">*</span></label><select name="unidade" class="sel-unidade" required><option value="">Selecione...</option></select></div>
+        <div class="field"><label>Data <span class="req">*</span></label><input type="date" name="data" required></div>
+        <div class="field"><label>Nome Completo <span class="req">*</span></label><input type="text" name="nome" required></div>
+        <div class="field"><label>LDAP <span class="req">*</span></label><input type="text" name="ldap" required></div>
+        <div class="field">
+          <label>Setor Solicitante</label>
+          <select name="setor" id="sel-setor-selo">
+            <option value="">Selecione...</option>
+            <option>AMBULATÓRIO</option><option>CONTROL TOWER</option><option>EXCELÊNCIA OPERACIONAL</option>
+            <option>FACILITIES</option><option>FLOW</option><option>IS</option><option>INVENTÁRIO</option>
+            <option>LINE HAUL</option><option>LOSS PREVENTION</option><option>MANUTENÇÃO</option>
+            <option>OPERAÇÕES</option><option>PEOPLE</option><option>PI</option><option>PROJETOS</option>
+            <option>REVERSA</option><option>SHE</option><option>TREINAMENTO</option><option>OUTRO</option>
+            <option value="__add__">+ Adicionar novo setor...</option>
+          </select>
+          <div class="add-opt-row" id="add-setor-box" style="display:none">
+            <input type="text" id="add-setor-input" placeholder="Nome do setor (MAIÚSCULO)">
+            <button type="button" class="add-opt-confirm" id="add-setor-ok">✓</button>
+            <button type="button" class="add-opt-cancel" id="add-setor-cancel">✕</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Empresa <span class="req">*</span></label>
+          <div class="combo-wrap">
+            <input type="text" name="empresa" id="inp-empresa-selo" class="combo-input" autocomplete="off" placeholder="Digite ou selecione..." required>
+            <button type="button" class="btn-add-opt" id="btn-save-empresa" title="Salvar empresa">+</button>
+            <div class="combo-dd" id="dd-empresa-selo"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cargo / Função</label>
+          <select name="cargo" id="sel-cargo-selo">
+            <option value="">Selecione...</option>
+            <option>ASSISTENTE</option><option>TEAM LIDER</option><option>ANALISTA</option>
+            <option>COORDENADOR</option><option>SUPERVISOR</option><option>ESPECIALISTA</option>
+            <option>GERENTE</option><option>DIRETOR</option>
+            <option>OPS I</option><option>OPS II</option><option>OPS III</option><option>OUTRO</option>
+            <option value="__add__">+ Adicionar novo cargo...</option>
+          </select>
+          <div class="add-opt-row" id="add-cargo-box" style="display:none">
+            <input type="text" id="add-cargo-input" placeholder="Nome do cargo (MAIÚSCULO)">
+            <button type="button" class="add-opt-confirm" id="add-cargo-ok">✓</button>
+            <button type="button" class="add-opt-cancel" id="add-cargo-cancel">✕</button>
+          </div>
+        </div>
+        <div class="field"><label>E-mail do Gestor <span class="req">*</span></label><input type="email" name="emailGestor" required></div>
+        <div class="field field-full"><label>Motivo <span class="req">*</span></label><textarea name="motivo" required style="min-height:120px"></textarea></div>
+      </div></div>
+      <div class="form-card"><div class="form-section-label">Selos Solicitados</div>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" name="seloCel"> SELO CEL</label>
+          <label class="check-item"><input type="checkbox" name="seloCarregCel"> SELO CARREG CEL</label>
+          <label class="check-item"><input type="checkbox" name="seloNotebook"> SELO NOTEBOOK</label>
+          <label class="check-item"><input type="checkbox" name="seloCarregNotebook"> SELO CARREG NOTEBOOK</label>
+          <label class="check-item"><input type="checkbox" name="seloCapaCel"> SELO CAPA CEL</label>
+          <label class="check-item"><input type="checkbox" name="seloPenDriver"> SELO PEN DRIVER</label>
+          <label class="check-item"><input type="checkbox" name="seloMouse"> SELO MOUSE</label>
+          <label class="check-item"><input type="checkbox" name="seloFone"> SELO FONE DE OUVIDO</label>
+          <label class="check-item"><input type="checkbox" name="seloTeclado"> SELO TECLADO</label>
+          <label class="check-item"><input type="checkbox" name="seloOutros"> OUTROS</label>
+        </div>
       </div>
-      <div class="field" style="margin-top:14px"><label>Outros</label><input type="text" name="outros"></div>
-    </div>
-    <div class="submit-wrap"><button type="button" class="btn-secondary" data-home="sol">Cancelar</button><button type="submit" class="btn-primary">Enviar Solicitação</button></div>
+      <div class="submit-wrap"><button type="button" class="btn-secondary" data-home="sol">Cancelar</button><button type="submit" class="btn-primary">Enviar Solicitação</button></div>
     </form>
   </div>
 
@@ -1411,6 +1471,9 @@ document.querySelectorAll('form[data-tipo]').forEach(form=>{
     const btn=e.submitter;const orig=btn?.textContent;
     if(btn){btn.textContent='Enviando...';btn.disabled=true;}
     const dados={};new FormData(this).forEach((v,k)=>{dados[k]=v;});
+    // Limpa valores de opção "Adicionar novo" que não foram confirmados
+    if(dados.setor==='__add__') dados.setor='';
+    if(dados.cargo==='__add__') dados.cargo='';
     this.querySelectorAll('input[type=checkbox]').forEach(cb=>{dados[cb.name]=cb.checked?'SIM':'';});
     google.script.run
       .withSuccessHandler(res=>{
@@ -1577,6 +1640,141 @@ function preencherSelectsUnidade(unidades){
     if(valorAtual)sel.value=valorAtual;
   });
 }
+
+// ══ OPÇÕES CUSTOMIZADAS (setor / empresa / cargo) ══
+var _lpOpts = {setor:[], empresa:[], cargo:[]};
+
+function _loadLpOpts(){
+  try{ var s=localStorage.getItem('lp_opts'); if(s) _lpOpts=JSON.parse(s); }catch(e){}
+  ['setor','empresa','cargo'].forEach(function(k){ if(!Array.isArray(_lpOpts[k])) _lpOpts[k]=[]; });
+}
+
+function _saveLpOpt(tipo, valor){
+  valor = String(valor).trim().toUpperCase();
+  if(!valor) return valor;
+  _loadLpOpts();
+  if(_lpOpts[tipo].indexOf(valor)===-1){
+    _lpOpts[tipo].push(valor);
+    _lpOpts[tipo].sort();
+    try{ localStorage.setItem('lp_opts', JSON.stringify(_lpOpts)); }catch(e){}
+  }
+  return valor;
+}
+
+function _addOptToSelect(sel, valor){
+  var addOpt = sel.querySelector('option[value="__add__"]');
+  if(!Array.from(sel.options).find(function(o){ return o.value===valor; })){
+    var opt = document.createElement('option');
+    opt.value = valor; opt.textContent = valor;
+    sel.insertBefore(opt, addOpt);
+  }
+  sel.value = valor;
+}
+
+(function _initOpcoesCustom(){
+  _loadLpOpts();
+
+  // ── Setor ──
+  var selSetor = document.getElementById('sel-setor-selo');
+  if(selSetor){
+    var addOptSetor = selSetor.querySelector('option[value="__add__"]');
+    _lpOpts.setor.forEach(function(s){
+      var o=document.createElement('option'); o.value=s; o.textContent=s;
+      selSetor.insertBefore(o, addOptSetor);
+    });
+    selSetor.addEventListener('change', function(){
+      if(this.value==='__add__'){
+        document.getElementById('add-setor-box').style.display='flex';
+        document.getElementById('add-setor-input').focus();
+      }
+    });
+    document.getElementById('add-setor-ok').addEventListener('click', function(){
+      var v = document.getElementById('add-setor-input').value.trim().toUpperCase();
+      if(!v) return;
+      _saveLpOpt('setor', v);
+      _addOptToSelect(selSetor, v);
+      document.getElementById('add-setor-box').style.display='none';
+      document.getElementById('add-setor-input').value='';
+    });
+    document.getElementById('add-setor-input').addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-setor-ok').click(); }
+      if(e.key==='Escape'){ document.getElementById('add-setor-cancel').click(); }
+    });
+    document.getElementById('add-setor-cancel').addEventListener('click', function(){
+      selSetor.value='';
+      document.getElementById('add-setor-box').style.display='none';
+      document.getElementById('add-setor-input').value='';
+    });
+  }
+
+  // ── Cargo ──
+  var selCargo = document.getElementById('sel-cargo-selo');
+  if(selCargo){
+    var addOptCargo = selCargo.querySelector('option[value="__add__"]');
+    _lpOpts.cargo.forEach(function(s){
+      var o=document.createElement('option'); o.value=s; o.textContent=s;
+      selCargo.insertBefore(o, addOptCargo);
+    });
+    selCargo.addEventListener('change', function(){
+      if(this.value==='__add__'){
+        document.getElementById('add-cargo-box').style.display='flex';
+        document.getElementById('add-cargo-input').focus();
+      }
+    });
+    document.getElementById('add-cargo-ok').addEventListener('click', function(){
+      var v = document.getElementById('add-cargo-input').value.trim().toUpperCase();
+      if(!v) return;
+      _saveLpOpt('cargo', v);
+      _addOptToSelect(selCargo, v);
+      document.getElementById('add-cargo-box').style.display='none';
+      document.getElementById('add-cargo-input').value='';
+    });
+    document.getElementById('add-cargo-input').addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-cargo-ok').click(); }
+      if(e.key==='Escape'){ document.getElementById('add-cargo-cancel').click(); }
+    });
+    document.getElementById('add-cargo-cancel').addEventListener('click', function(){
+      selCargo.value='';
+      document.getElementById('add-cargo-box').style.display='none';
+      document.getElementById('add-cargo-input').value='';
+    });
+  }
+
+  // ── Empresa (combobox) ──
+  var inpEmpresa = document.getElementById('inp-empresa-selo');
+  var ddEmpresa  = document.getElementById('dd-empresa-selo');
+  if(inpEmpresa && ddEmpresa){
+    function renderEmpresaDd(filter){
+      var items = _lpOpts.empresa.filter(function(e){
+        return !filter || e.indexOf(filter.toUpperCase())!==-1;
+      });
+      if(!items.length){ ddEmpresa.classList.remove('open'); return; }
+      ddEmpresa.innerHTML = items.map(function(e){
+        return '<div class="combo-dd-item" data-val="'+e+'">'+e+'</div>';
+      }).join('');
+      ddEmpresa.classList.add('open');
+      ddEmpresa.querySelectorAll('.combo-dd-item').forEach(function(el){
+        el.addEventListener('click', function(){
+          inpEmpresa.value = this.dataset.val;
+          ddEmpresa.classList.remove('open');
+        });
+      });
+    }
+    inpEmpresa.addEventListener('input', function(){ renderEmpresaDd(this.value); });
+    inpEmpresa.addEventListener('focus', function(){ renderEmpresaDd(this.value); });
+    document.addEventListener('click', function(e){
+      if(!inpEmpresa.contains(e.target) && !ddEmpresa.contains(e.target))
+        ddEmpresa.classList.remove('open');
+    });
+    document.getElementById('btn-save-empresa').addEventListener('click', function(){
+      var v = inpEmpresa.value.trim().toUpperCase();
+      if(!v) return;
+      inpEmpresa.value = v;
+      _saveLpOpt('empresa', v);
+      _loadLpOpts();
+    });
+  }
+})();
 
 // ══ PERMISSÕES ══
 // Administrador → todas as abas + só suas unidades
