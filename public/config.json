@@ -1,0 +1,56 @@
+{
+  "_instrucoes": {
+    "googleClientId": "OAuth 2.0 Client ID do Google Cloud Console (tipo Web). Adicione a URL do GitHub Pages como origem autorizada.",
+    "spreadsheetId": "Apenas o ID da planilha — parte entre /d/ e /edit na URL",
+    "sheetNames": "Mapeamento opcional tipo→aba. Padrão: {\"selo\":\"SELOS\",\"cracha\":\"CRACHAS\",\"investigacao\":\"INVESTIGACOES\",\"cadeado\":\"CADEADOS\",\"cartao\":\"CARTOES\",\"disciplinar\":\"DISCIPLINAR\",\"ronda\":\"RONDAS\",\"bau\":\"BAU\",\"pacote\":\"PACOTES\",\"lacre\":\"LACRES\",\"acesso\":\"ACESSOS\"}",
+    "usuarios": "Com googleClientId: emails do Google devem estar em 'users' para ter permissões. Sem: login email+senha.",
+    "unidades": "Sem spreadsheetId: defina unidades aqui. Com spreadsheetId: lidas da aba UNIDADES da planilha"
+  },
+  "googleClientId": "",
+  "spreadsheetId": "",
+  "sheetNames": {
+    "selo": "SELOS",
+    "cracha": "CRACHAS",
+    "investigacao": "INVESTIGACOES",
+    "cadeado": "CADEADOS",
+    "cartao": "CARTOES",
+    "disciplinar": "DISCIPLINAR",
+    "ronda": "RONDAS",
+    "bau": "BAU",
+    "pacote": "PACOTES",
+    "lacre": "LACRES",
+    "acesso": "ACESSOS"
+  },
+  "users": [
+    {
+      "email": "admin@empresa.com",
+      "senha": "admin123",
+      "permissao": "Administrador",
+      "unidades": []
+    },
+    {
+      "email": "supervisor@empresa.com",
+      "senha": "super123",
+      "permissao": "Usuario",
+      "unidades": []
+    },
+    {
+      "email": "portaria@empresa.com",
+      "senha": "portaria123",
+      "permissao": "Portaria",
+      "unidades": []
+    }
+  ],
+  "unidades": [
+    {
+      "nome": "CD São Paulo",
+      "lat": "-23.5505",
+      "lng": "-46.6333"
+    },
+    {
+      "nome": "CD Cajamar",
+      "lat": "-23.3572",
+      "lng": "-46.8756"
+    }
+  ]
+}
