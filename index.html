@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loss Prevention — Gestão</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg:#080808; --bg2:#111; --card:#141414; --card2:#1a1a1a;
@@ -552,7 +551,6 @@ body.is-mobile #mapa-info-card {
       <span class="user-badge-role" id="userRoleBadge"></span>
       <button id="btnSair" onclick="doLogout()">Sair</button>
     </div>
-    <button id="btnEntrar" onclick="showLoginModal()">Entrar</button>
     <button id="btnSettings" onclick="showSettingsModal()" title="Configurações">⚙</button>
     <button id="btnExport" onclick="exportarDados()" title="Exportar dados">⬇ Backup</button>
     <button id="btnImport" onclick="importarDados()" title="Importar dados">⬆ Restaurar</button>
@@ -1012,21 +1010,10 @@ var LP = {
 
 var GAS_IMPL = {
 
-  // ── Autenticação: Google SSO + validação na planilha ───────────
   iniciarApp: function(){
     var cfg = _lpConfig || {unidades:[]};
     var allU = (cfg.unidades || []).map(function(u){ return u.nome || u; });
-    var sess = LP.getSession();
-    if(!sess || !sess.email) return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: allU};
-    var email = sess.email;
-    if(cfg.gasWebAppUrl){
-      return GAS_IMPL._post({action:'iniciarApp', email: email}).then(function(res){
-        if(!res) return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: allU};
-        if(!res.unidades || !res.unidades.length) res.unidades = allU;
-        return res;
-      });
-    }
-    return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: allU};
+    return {permissao: 'Administrador', email: '', unidadesUsuario: [], unidades: allU};
   },
 
   // ── Chamada HTTP ao GAS Web App ─────────────────────────────────
@@ -1702,10 +1689,7 @@ function _onAuthFail(err) {
     .catch(function(){
       var c = localStorage.getItem('lp_config');
       if(c){ try{ _lpConfig = JSON.parse(c); }catch(e){} }
-      if(!_lpConfig) _lpConfig = {
-        users: [{email:'admin@local', senha:'admin123', permissao:'Administrador', unidades:[]}],
-        unidades: []
-      };
+      if(!_lpConfig) _lpConfig = {unidades: []};
     })
     .finally(function(){
       // Se config.json não tiver URL mas o admin salvou manualmente, restaura
@@ -2212,68 +2196,7 @@ function _atualizarStatusConexao(url){
 }
 
 // ════════════════════════════════════════════════════════════════
-// LOGIN / LOGOUT — Google SSO
-// ════════════════════════════════════════════════════════════════
-var _gisInitialized = false;
-
-function showLoginModal(){
-  var modal = document.getElementById('lpLoginModal');
-  if(modal) modal.classList.add('show');
-  document.getElementById('lpLoginErr').classList.remove('show');
-  _renderGoogleButton();
-}
-
-function _renderGoogleButton(){
-  if(!window.google || !window.google.accounts || !window.google.accounts.id){
-    setTimeout(_renderGoogleButton, 300);
-    return;
-  }
-  if(!_gisInitialized){
-    window.google.accounts.id.initialize({
-      client_id: 'COLE_SEU_GOOGLE_CLIENT_ID_AQUI',
-      callback: handleGoogleSignIn,
-      hd: 'mercadolibre.com.br'
-    });
-    _gisInitialized = true;
-  }
-  var container = document.getElementById('googleSignInContainer');
-  if(container) window.google.accounts.id.renderButton(container,
-    {theme:'outline', size:'large', text:'signin_with', width:308, locale:'pt-BR'});
-}
-
-function handleGoogleSignIn(response){
-  try{
-    var parts = response.credential.split('.');
-    var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-    var email = (payload.email || '').toLowerCase();
-    if(!email.endsWith('@mercadolibre.com.br')){
-      var err = document.getElementById('lpLoginErr');
-      err.textContent = 'Acesso restrito ao domínio @mercadolibre.com.br';
-      err.classList.add('show');
-      return;
-    }
-    LP.saveSession({email: email});
-    hideLoginModal();
-    document.getElementById('authLoading').style.display = 'flex';
-    google.script.run.withSuccessHandler(_onAuthSuccess).withFailureHandler(_onAuthFail).iniciarApp();
-  }catch(e){
-    var err = document.getElementById('lpLoginErr');
-    err.textContent = 'Erro ao processar autenticação. Tente novamente.';
-    err.classList.add('show');
-  }
-}
-
-function hideLoginModal(){
-  document.getElementById('lpLoginModal').classList.remove('show');
-  document.getElementById('lpLoginErr').classList.remove('show');
-}
-
-function doLogout(){
-  LP.clearSession();
-  if(window.google && window.google.accounts && window.google.accounts.id)
-    window.google.accounts.id.disableAutoSelect();
-  location.reload();
-}
+function doLogout(){ location.reload(); }
 
 // ════════════════════════════════════════════════════════════════
 // BOTÕES ENTRAR / SAIR / BACKUP — sincronizados com permissão
@@ -2296,10 +2219,6 @@ function doLogout(){
   };
 })();
 
-// Escape fecha o modal de login
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape' && document.getElementById('lpLoginModal').classList.contains('show')) hideLoginModal();
-});
 
 // ════════════════════════════════════════════════════════════════
 // EXPORTAR / IMPORTAR DADOS (backup localStorage)
@@ -2364,17 +2283,5 @@ function importarDados(){
   </div>
 </div>
 
-<!-- ══ LOGIN MODAL ══ -->
-<div id="lpLoginModal">
-  <div class="lp-login-box">
-    <div class="lp-login-logo">
-      <h2>🔒 Loss Prevention</h2>
-      <p>Acesse com sua conta Mercado Livre</p>
-    </div>
-    <div id="googleSignInContainer" style="display:flex;justify-content:center;margin:8px 0 4px;min-height:44px;"></div>
-    <div class="lp-login-err" id="lpLoginErr">Acesso restrito ao domínio @mercadolibre.com.br</div>
-    <span class="lp-login-skip" onclick="hideLoginModal()">Continuar como público</span>
-  </div>
-</div>
 </body>
 </html>
