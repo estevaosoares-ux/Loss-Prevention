@@ -1,24 +1,27 @@
 // ════════════════════════════════════════════════════════════════
-// LOSS PREVENTION — GAS Web App (backend de dados)
+// LOSS PREVENTION — Google Apps Script
 // ════════════════════════════════════════════════════════════════
 //
 // COMO IMPLANTAR:
-//   1. Acesse script.google.com → Novo projeto
-//   2. Cole este código
-//   3. Altere SPREADSHEET_ID com o ID da sua planilha
-//   4. Ajuste TIPO_SHEET conforme os nomes reais das suas abas
-//   5. Implante → Web App
+//   1. Acesse script.google.com → cole este código no arquivo .gs
+//   2. Crie um arquivo HTML chamado "index" e cole o index.html
+//   3. Implante → Web App
 //        Execute as: Me
-//        Who has access: Anyone
-//   6. Copie a URL gerada e cole em config.json → "gasWebAppUrl"
+//        Who has access: Anyone with Google Account  (ou Anyone)
+//   4. Autorize as permissões quando solicitado
 //
-// ID da planilha: está na URL
-//   https://docs.google.com/spreadsheets/d/SEU_ID_AQUI/edit
+// ABA DE USUÁRIOS na planilha deve se chamar "USUARIOS" e ter:
+//   Coluna A → EMAIL
+//   Coluna B → PERMISSAO  (Administrador | Usuario | Portaria)
+//   Coluna C → UNIDADES   (nomes separados por vírgula, ou "TODAS")
 // ════════════════════════════════════════════════════════════════
 
-var SPREADSHEET_ID = 'COLE_O_ID_DA_SUA_PLANILHA_AQUI';
+var SPREADSHEET_ID = '1Foln_V3Pq0jqC7xDSNytYzMF_k3S2Amfdt6-U4ZgMxg';
 
-// Mapa tipo → nome da aba na planilha (ajuste conforme suas abas)
+// Nome da aba de usuários (verifique o nome exato na sua planilha)
+var USUARIOS_SHEET = 'USUARIOS';
+
+// Mapa tipo → nome da aba de dados
 var TIPO_SHEET = {
   'selo':         'SELOS',
   'cracha':       'CRACHAS',
@@ -33,28 +36,71 @@ var TIPO_SHEET = {
   'acesso':       'ACESSOS'
 };
 
-// ── Ponto de entrada HTTP ────────────────────────────────────────
-function doPost(e) {
-  var result;
-  try {
-    var payload = JSON.parse(e.postData.contents);
-    var action  = payload.action;
+// ── Serve o HTML principal ───────────────────────────────────────
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('Loss Prevention')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
 
-    if      (action === 'lerBase')           result = lerBase(payload.tipo, payload.unidades || []);
-    else if (action === 'salvarRegistro')    result = salvarRegistro(payload.tipo, payload.dados);
-    else if (action === 'atualizarRegistro') result = atualizarRegistro(payload.tipo, payload.updated);
-    else if (action === 'lerUnidades')       result = lerUnidadesComCoordenadas();
-    else if (action === 'getUnidades')       result = getUnidades();
-    else if (action === 'getOpcoesCustom')   result = getOpcoesCustom();
-    else if (action === 'salvarOpcaoCustom') result = salvarOpcaoCustom(payload.tipo, payload.valor);
-    else                                     result = {error: 'action desconhecida: ' + action};
-  } catch(err) {
-    result = {error: err.toString()};
+// ── Autenticação via planilha USUARIOS ──────────────────────────
+function iniciarApp() {
+  var email   = Session.getActiveUser().getEmail();
+  var todasUnidades = getUnidades();
+
+  if (!email) {
+    return {permissao: 'publico', email: '', unidadesUsuario: [], unidades: todasUnidades};
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(USUARIOS_SHEET);
+
+  if (!sheet) {
+    // Aba não encontrada → acesso público
+    return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: todasUnidades};
+  }
+
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) {
+    return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: todasUnidades};
+  }
+
+  var headers    = data[0].map(function(h){ return String(h).trim().toUpperCase(); });
+  var emailIdx   = headers.indexOf('EMAIL');
+  var permIdx    = headers.indexOf('PERMISSAO');
+  var unidIdx    = headers.indexOf('UNIDADES');
+
+  // Fallback por posição se não achar o cabeçalho
+  if (emailIdx === -1) emailIdx = 0;
+  if (permIdx  === -1) permIdx  = 1;
+  if (unidIdx  === -1) unidIdx  = 2;
+
+  var emailLower = email.toLowerCase().trim();
+
+  for (var i = 1; i < data.length; i++) {
+    var rowEmail = String(data[i][emailIdx] || '').trim().toLowerCase();
+    if (rowEmail === emailLower) {
+      var permissao = String(data[i][permIdx] || 'publico').trim();
+      var unidadesUsuario = [];
+      var rawUnid = String(data[i][unidIdx] || '').trim();
+
+      if (!rawUnid || rawUnid.toUpperCase() === 'TODAS' || rawUnid === '*') {
+        unidadesUsuario = todasUnidades; // acesso a todas as unidades
+      } else {
+        unidadesUsuario = rawUnid.split(',').map(function(u){ return u.trim(); }).filter(Boolean);
+      }
+
+      return {
+        permissao:        permissao,
+        email:            email,
+        unidadesUsuario:  unidadesUsuario,
+        unidades:         todasUnidades
+      };
+    }
+  }
+
+  // E-mail não encontrado na lista → acesso público
+  return {permissao: 'publico', email: email, unidadesUsuario: [], unidades: todasUnidades};
 }
 
 // ── Lê registros de uma aba ──────────────────────────────────────
@@ -78,11 +124,10 @@ function lerBase(tipo, unidades) {
     var hasId = false;
     for (var j = 0; j < headers.length; j++) {
       var val = row[j];
-      // Formata datas legíveis
       if (val instanceof Date) {
         obj[headers[j]] = Utilities.formatDate(val, Session.getScriptTimeZone(), 'dd/MM/yyyy');
       } else {
-        obj[headers[j]] = val !== null && val !== undefined ? String(val) : '';
+        obj[headers[j]] = (val !== null && val !== undefined) ? String(val) : '';
       }
       if ((headers[j] === 'ID' || headers[j] === 'id') && obj[headers[j]]) hasId = true;
     }
@@ -108,7 +153,6 @@ function salvarRegistro(tipo, dados) {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(sheetName);
 
-  // Cria aba se não existir
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
   }
@@ -116,7 +160,6 @@ function salvarRegistro(tipo, dados) {
   var existingData = sheet.getDataRange().getValues();
   var headers = existingData.length > 0 ? existingData[0].map(String) : [];
 
-  // Gera ID sequencial
   var pfxMap = {
     selo:'SEL', cracha:'CRA', investigacao:'INV', cadeado:'CAD',
     cartao:'CAR', disciplinar:'DIS', ronda:'RON', bau:'BAU',
@@ -131,19 +174,16 @@ function salvarRegistro(tipo, dados) {
   var d   = Utilities.formatDate(now, tz, 'dd/MM/yyyy');
   var h   = Utilities.formatDate(now, tz, 'HH:mm');
 
-  // Monta o registro completo
   var record = {ID: id, DATA: d, HORA: h, STATUS: 'Pendente'};
   var keys   = Object.keys(dados);
   for (var k = 0; k < keys.length; k++) {
     record[keys[k]] = dados[keys[k]];
   }
 
-  // Adiciona colunas novas que ainda não existem
-  var allKeys  = Object.keys(record);
-  var newKeys  = allKeys.filter(function(k){ return headers.indexOf(k) === -1; });
+  var allKeys = Object.keys(record);
+  var newKeys = allKeys.filter(function(k){ return headers.indexOf(k) === -1; });
 
   if (headers.length === 0) {
-    // Aba nova — define cabeçalhos
     headers = allKeys;
     sheet.appendRow(headers);
   } else if (newKeys.length > 0) {
@@ -169,8 +209,8 @@ function atualizarRegistro(tipo, updated) {
   var data    = sheet.getDataRange().getValues();
   if (data.length < 2) return {error: 'aba vazia'};
 
-  var headers = data[0].map(String);
-  var idCol   = headers.indexOf('ID');
+  var headers  = data[0].map(String);
+  var idCol    = headers.indexOf('ID');
   if (idCol === -1) return {error: 'coluna ID não encontrada em ' + sheetName};
 
   var targetId = updated['ID'];
@@ -188,7 +228,7 @@ function atualizarRegistro(tipo, updated) {
   return {error: 'ID não encontrado: ' + targetId};
 }
 
-// ── Retorna lista de nomes de unidades (col D da aba UNIDADES) ───
+// ── Lista nomes de unidades (aba UNIDADES, coluna NOME) ──────────
 function getUnidades() {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('UNIDADES');
@@ -197,7 +237,7 @@ function getUnidades() {
   if (data.length < 2) return [];
   var headers = data[0].map(String);
   var colIdx  = headers.indexOf('NOME');
-  if (colIdx === -1) colIdx = 3; // fallback: col D (index 3)
+  if (colIdx === -1) colIdx = 0;
   var result = [];
   for (var i = 1; i < data.length; i++) {
     var v = String(data[i][colIdx] || '').trim();
@@ -206,7 +246,7 @@ function getUnidades() {
   return result;
 }
 
-// ── Retorna opções customizadas salvas (empresa/setor/cargo) ─────
+// ── Retorna opções customizadas (setor/empresa/cargo) ────────────
 function getOpcoesCustom() {
   var props = PropertiesService.getScriptProperties();
   var raw   = props.getProperty('lp_opts');
@@ -217,18 +257,18 @@ function getOpcoesCustom() {
 // ── Salva nova opção customizada em MAIÚSCULO ────────────────────
 function salvarOpcaoCustom(tipo, valor) {
   valor = String(valor).trim().toUpperCase();
-  if (!valor) return {ok:false};
+  if (!valor) return {ok: false};
   var props = PropertiesService.getScriptProperties();
   var raw   = props.getProperty('lp_opts');
   var opts  = {setor:[], empresa:[], cargo:[]};
-  try { if(raw) opts = JSON.parse(raw); } catch(e){}
+  try { if (raw) opts = JSON.parse(raw); } catch(e){}
   if (!Array.isArray(opts[tipo])) opts[tipo] = [];
   if (opts[tipo].indexOf(valor) === -1) {
     opts[tipo].push(valor);
     opts[tipo].sort();
   }
   props.setProperty('lp_opts', JSON.stringify(opts));
-  return {ok:true, valor:valor};
+  return {ok: true, valor: valor};
 }
 
 // ── Lê unidades com coordenadas (aba UNIDADES) ───────────────────
@@ -254,10 +294,10 @@ function lerUnidadesComCoordenadas() {
     var parts = latlong.split(',');
     if (parts.length < 2) continue;
     result.push({
-      nome:     String(data[i][nomeIdx] || ''),
-      unidade:  String(data[i][nomeIdx] || ''),
-      lat:      parts[0].trim(),
-      lng:      parts[1].trim()
+      nome:    String(data[i][nomeIdx] || ''),
+      unidade: String(data[i][nomeIdx] || ''),
+      lat:     parts[0].trim(),
+      lng:     parts[1].trim()
     });
   }
   return result;
