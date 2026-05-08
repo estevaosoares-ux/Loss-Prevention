@@ -1516,7 +1516,7 @@ function aplicarPermissoes(permissao, unidadesArr, email) {
 const today = new Date().toISOString().split('T')[0];
 document.querySelectorAll('input[type=date]').forEach(el => { if (!el.value) el.value = today; });
 
-const _authTimeout = setTimeout(() => {}, 30000); // placeholder
+const _authTimeout = setTimeout(() => _onAuthFail('Tempo esgotado'), 15000);
 
 function _onAuthSuccess(resultado) {
   clearTimeout(_authTimeout);
