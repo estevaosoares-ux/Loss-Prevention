@@ -1011,23 +1011,41 @@ body.is-mobile #mapa-info-card {
 
 // ════════════════════════════════════════════════════════════════
 // BACKEND LOCAL — substitui Google Apps Script
-// Dados em localStorage · Usuários em config.json
+// MyGrid: window.GRID.state · Polyfill dev: localStorage
 // ════════════════════════════════════════════════════════════════
+
+// Polyfill window.GRID para execução fora do MyGrid (dev local)
+if (!window.GRID) {
+  window.GRID = {
+    state: {
+      get: function() {
+        try{ return Promise.resolve({ state: JSON.parse(localStorage.getItem('_grid_state')||'{}'), updated_at: 0 }); }
+        catch(e){ return Promise.resolve({ state: {}, updated_at: 0 }); }
+      },
+      set: function(state, ua) {
+        try{ localStorage.setItem('_grid_state', JSON.stringify(state)); }catch(e){}
+        return Promise.resolve({ updated_at: Date.now() });
+      }
+    }
+  };
+}
+
 var _lpConfig = null;
+var _gridState = {};
+var _gridUpdatedAt = 0;
+
+function _saveGridState(){
+  window.GRID.state.set(Object.assign({}, _gridState), _gridUpdatedAt)
+    .then(function(r){ _gridUpdatedAt = r.updated_at || 0; })
+    .catch(function(e){ console.warn('GRID.state.set falhou', e); });
+}
 
 var LP = {
-  getData: function(){
-    try{ return JSON.parse(localStorage.getItem('lp_data') || '{}'); }catch(e){ return {}; }
-  },
-  saveData: function(d){
-    try{ localStorage.setItem('lp_data', JSON.stringify(d)); }
-    catch(e){ alert('Armazenamento cheio. Exporte e limpe os dados antes de continuar.'); }
-  },
-  getSession: function(){
-    try{ return JSON.parse(sessionStorage.getItem('lp_session') || 'null'); }catch(e){ return null; }
-  },
-  saveSession: function(s){ sessionStorage.setItem('lp_session', JSON.stringify(s)); },
-  clearSession: function(){ sessionStorage.removeItem('lp_session'); }
+  getData:      function(){ try{ return JSON.parse(JSON.stringify(_gridState.lp_data||{})); }catch(e){ return {}; } },
+  saveData:     function(d){ _gridState.lp_data = d; _saveGridState(); },
+  getSession:   function(){ return _gridState.lp_session || null; },
+  saveSession:  function(s){ _gridState.lp_session = s; _saveGridState(); },
+  clearSession: function(){ _gridState.lp_session = null; _saveGridState(); }
 };
 
 var GAS_IMPL = {
@@ -1707,27 +1725,32 @@ function _onAuthFail(err) {
 
 // Login manual removido — app abre direto
 
-// Carrega config.json e então inicia app
+// Carrega estado do GRID e então inicia app
 (function _bootstrapApp(){
-  fetch('./config.json?t=' + Date.now())
-    .then(function(r){ return r.ok ? r.json() : Promise.reject('not found'); })
-    .then(function(cfg){
-      _lpConfig = cfg;
-      try{ localStorage.setItem('lp_config', JSON.stringify(cfg)); }catch(e){}
+  window.GRID.state.get()
+    .then(function(result){
+      _gridState     = result.state || {};
+      _gridUpdatedAt = result.updated_at || 0;
+      // Tenta config.json (dev/GitHub Pages) — opcional no MyGrid
+      return fetch('./config.json?t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : Promise.reject('not found'); })
+        .then(function(cfg){ _lpConfig = cfg; _gridState.lp_config = cfg; _saveGridState(); })
+        .catch(function(){
+          _lpConfig = _gridState.lp_config || {
+            users: [{email:'admin@local', senha:'admin123', permissao:'Administrador', unidades:[]}],
+            unidades: []
+          };
+        });
     })
     .catch(function(){
-      var c = localStorage.getItem('lp_config');
-      if(c){ try{ _lpConfig = JSON.parse(c); }catch(e){} }
-      if(!_lpConfig) _lpConfig = {
+      _lpConfig = {
         users: [{email:'admin@local', senha:'admin123', permissao:'Administrador', unidades:[]}],
         unidades: []
       };
     })
     .finally(function(){
-      // Se config.json não tiver URL mas o admin salvou manualmente, restaura
-      if(_lpConfig && !_lpConfig.gasWebAppUrl){
-        var saved = localStorage.getItem('lp_webAppUrl');
-        if(saved) _lpConfig.gasWebAppUrl = saved;
+      if(_lpConfig && !_lpConfig.gasWebAppUrl && _gridState.lp_webAppUrl){
+        _lpConfig.gasWebAppUrl = _gridState.lp_webAppUrl;
       }
       google.script.run
         .withSuccessHandler(_onAuthSuccess)
@@ -2188,7 +2211,7 @@ function _mostrarInfoCard(u) {
 // CONFIGURAÇÕES — URL do GAS Web App
 // ════════════════════════════════════════════════════════════════
 function showSettingsModal(){
-  var url = (_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '';
+  var url = (_lpConfig && _lpConfig.gasWebAppUrl) || _gridState.lp_webAppUrl || '';
   document.getElementById('settingsWebAppUrl').value = url;
   _atualizarStatusConexao(url);
   switchSettingsTab('conexao');
@@ -2200,7 +2223,8 @@ function hideSettingsModal(){
 function salvarSettings(){
   var url = document.getElementById('settingsWebAppUrl').value.trim();
   if(_lpConfig) _lpConfig.gasWebAppUrl = url;
-  localStorage.setItem('lp_webAppUrl', url);
+  _gridState.lp_webAppUrl = url;
+  _saveGridState();
   _atualizarStatusConexao(url);
   hideSettingsModal();
   if(url) {
@@ -2238,7 +2262,8 @@ function switchSettingsTab(tab){
   if(tab==='unidades') _renderUnitList();
 }
 function _saveConfig(){
-  try{ localStorage.setItem('lp_config', JSON.stringify(_lpConfig)); }catch(e){ alert('Erro ao salvar configuração no navegador.'); }
+  _gridState.lp_config = _lpConfig;
+  _saveGridState();
 }
 function _escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -2362,7 +2387,7 @@ function doLogout(){
     if(bSet) bSet.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bExp) bExp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
     if(bImp) bImp.style.display = (permissao === 'Administrador')      ? 'inline-block' : 'none';
-    _atualizarStatusConexao((_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '');
+    _atualizarStatusConexao((_lpConfig && _lpConfig.gasWebAppUrl) || _gridState.lp_webAppUrl || '');
   };
 })();
 
