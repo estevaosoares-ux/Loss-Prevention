@@ -480,6 +480,27 @@ body.is-mobile #mapa-info-card {
 .lp-settings-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--text-muted);}
 .lp-settings-indicator.on{background:var(--green);box-shadow:0 0 6px var(--green);}
 .lp-settings-indicator.off{background:var(--red);}
+/* ══ SETTINGS TABS ══ */
+.lp-settings-tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.lp-settings-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border:none;background:none;cursor:pointer;padding:8px 16px 10px;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.lp-settings-tab.active{color:var(--yellow);border-bottom-color:var(--yellow);}
+.lp-settings-pane{display:none;}
+.lp-settings-pane.active{display:block;}
+.lp-user-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:14px;padding-right:2px;}
+.lp-user-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.lp-user-info{flex:1;min-width:0;}
+.lp-user-email{font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lp-user-role{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-top:2px;}
+.lp-user-del{background:none;border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:4px;cursor:pointer;padding:4px 10px;font-size:11px;transition:all .15s;flex-shrink:0;}
+.lp-user-del:hover{background:rgba(239,68,68,0.1);}
+.lp-add-form{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.lp-add-form-full{grid-column:1/-1;}
+.lp-add-input{background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;color:var(--text);font-size:12px;width:100%;transition:border .2s;}
+.lp-add-input:focus{outline:none;border-color:var(--yellow);}
+.lp-add-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;font-weight:600;display:block;}
+.lp-unit-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.lp-unit-name{flex:1;font-size:13px;color:var(--text);}
+.lp-unit-coords{font-size:10px;color:var(--text-muted);margin-top:2px;}
 </style>
 </head>
 <body id="appBody">
@@ -2170,6 +2191,7 @@ function showSettingsModal(){
   var url = (_lpConfig && _lpConfig.gasWebAppUrl) || localStorage.getItem('lp_webAppUrl') || '';
   document.getElementById('settingsWebAppUrl').value = url;
   _atualizarStatusConexao(url);
+  switchSettingsTab('conexao');
   document.getElementById('lpSettingsModal').classList.add('show');
 }
 function hideSettingsModal(){
@@ -2204,6 +2226,92 @@ function _atualizarStatusConexao(url){
   if(!badge) return;
   if(url){ badge.innerHTML='🟢 Sheets Conectado'; badge.style.color='var(--green)'; }
   else    { badge.innerHTML='🟡 Modo Local';      badge.style.color='var(--yellow)'; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GESTÃO DE CONFIGURAÇÃO LOCAL (MyGrid — sem config.json)
+// ════════════════════════════════════════════════════════════════
+function switchSettingsTab(tab){
+  document.querySelectorAll('.lp-settings-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===tab); });
+  document.querySelectorAll('.lp-settings-pane').forEach(function(p){ p.classList.toggle('active', p.id==='settingsPane_'+tab); });
+  if(tab==='users')    _renderUserList();
+  if(tab==='unidades') _renderUnitList();
+}
+function _saveConfig(){
+  try{ localStorage.setItem('lp_config', JSON.stringify(_lpConfig)); }catch(e){ alert('Erro ao salvar configuração no navegador.'); }
+}
+function _escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function _renderUserList(){
+  var users = (_lpConfig && _lpConfig.users) || [];
+  var el = document.getElementById('lpUserList');
+  if(!el) return;
+  if(!users.length){ el.innerHTML='<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">Nenhum usuário cadastrado.</div>'; return; }
+  el.innerHTML = users.map(function(u,i){
+    var isDefault = (u.email==='admin@local');
+    return '<div class="lp-user-item">'+
+      '<div class="lp-user-info"><div class="lp-user-email">'+_escHtml(u.email)+'</div><div class="lp-user-role">'+_escHtml(u.permissao)+(isDefault?' · padrão':'')+'</div></div>'+
+      (isDefault ? '' : '<button class="lp-user-del" onclick="removeUser('+i+')">✕</button>')+
+    '</div>';
+  }).join('');
+}
+function removeUser(idx){
+  if(!_lpConfig||!_lpConfig.users) return;
+  if(_lpConfig.users[idx]&&_lpConfig.users[idx].email==='admin@local'){ alert('Não é possível remover o admin padrão.'); return; }
+  if(!confirm('Remover usuário "'+(_lpConfig.users[idx]&&_lpConfig.users[idx].email)+'"?')) return;
+  _lpConfig.users.splice(idx,1);
+  _saveConfig();
+  _renderUserList();
+}
+function addUser(){
+  var email = (document.getElementById('nuEmail').value||'').trim().toLowerCase();
+  var senha = (document.getElementById('nuSenha').value||'').trim();
+  var perm  = document.getElementById('nuPerm').value;
+  if(!email||!senha){ alert('Preencha e-mail e senha.'); return; }
+  if(!_lpConfig){ _lpConfig={users:[],unidades:[]}; }
+  if(!_lpConfig.users) _lpConfig.users=[];
+  if(_lpConfig.users.some(function(u){ return (u.email||'').toLowerCase()===email; })){ alert('Este e-mail já está cadastrado.'); return; }
+  _lpConfig.users.push({email:email,senha:senha,permissao:perm,unidades:[]});
+  _saveConfig();
+  _renderUserList();
+  document.getElementById('nuEmail').value='';
+  document.getElementById('nuSenha').value='';
+}
+
+function _renderUnitList(){
+  var units = (_lpConfig && _lpConfig.unidades) || [];
+  var el = document.getElementById('lpUnitList');
+  if(!el) return;
+  if(!units.length){ el.innerHTML='<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">Nenhuma unidade cadastrada.</div>'; return; }
+  el.innerHTML = units.map(function(u,i){
+    var nome = _escHtml(u.nome||u.unidade||String(u));
+    var coords = (u.lat&&u.lng) ? u.lat+', '+u.lng : '(sem coordenadas)';
+    return '<div class="lp-unit-item">'+
+      '<div class="lp-unit-name">'+nome+'<div class="lp-unit-coords">'+_escHtml(coords)+'</div></div>'+
+      '<button class="lp-user-del" onclick="removeUnit('+i+')">✕</button>'+
+    '</div>';
+  }).join('');
+}
+function removeUnit(idx){
+  if(!_lpConfig||!_lpConfig.unidades) return;
+  if(!confirm('Remover unidade "'+(_lpConfig.unidades[idx]&&(_lpConfig.unidades[idx].nome||_lpConfig.unidades[idx].unidade))+'"?')) return;
+  _lpConfig.unidades.splice(idx,1);
+  _saveConfig();
+  _renderUnitList();
+}
+function addUnit(){
+  var nome = (document.getElementById('nuNome').value||'').trim();
+  var lat  = (document.getElementById('nuLat').value||'').trim();
+  var lng  = (document.getElementById('nuLng').value||'').trim();
+  if(!nome){ alert('Informe o nome da unidade.'); return; }
+  if(!_lpConfig){ _lpConfig={users:[],unidades:[]}; }
+  if(!_lpConfig.unidades) _lpConfig.unidades=[];
+  _lpConfig.unidades.push({nome:nome,lat:lat,lng:lng});
+  _saveConfig();
+  _renderUnitList();
+  document.getElementById('nuNome').value='';
+  document.getElementById('nuLat').value='';
+  document.getElementById('nuLng').value='';
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2306,21 +2414,75 @@ function importarDados(){
 <div id="lpSettingsModal">
   <div class="lp-settings-box">
     <h2>⚙ Configurações</h2>
-    <div class="lp-settings-field">
-      <label><span class="lp-settings-indicator" id="connIndicator"></span>URL do GAS Web App (Google Sheets)</label>
-      <input type="url" id="settingsWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
-      <small>
-        Implante o <strong>backend.gs</strong> no <a href="https://script.google.com" target="_blank" style="color:var(--yellow)">Google Apps Script</a>
-        como Web App (Execute as: Me · Who has access: Anyone) e cole a URL aqui.<br>
-        Deixe em branco para usar armazenamento local (localStorage).
-      </small>
+    <div class="lp-settings-tabs">
+      <button class="lp-settings-tab active" data-tab="conexao" onclick="switchSettingsTab('conexao')">🔗 Conexão</button>
+      <button class="lp-settings-tab" data-tab="users" onclick="switchSettingsTab('users')">👥 Usuários</button>
+      <button class="lp-settings-tab" data-tab="unidades" onclick="switchSettingsTab('unidades')">📍 Unidades</button>
     </div>
-    <div id="settingsStatus" class="lp-settings-status"></div>
-    <div class="lp-settings-row" style="margin-top:16px;">
-      <button class="lp-settings-btn sec" onclick="testarConexao()">Testar conexão</button>
-      <button class="lp-settings-btn" onclick="salvarSettings()">Salvar</button>
+    <!-- ABA: Conexão -->
+    <div class="lp-settings-pane active" id="settingsPane_conexao">
+      <div class="lp-settings-field">
+        <label><span class="lp-settings-indicator" id="connIndicator"></span>URL do GAS Web App (Google Sheets)</label>
+        <input type="url" id="settingsWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        <small>
+          Implante o <strong>backend.gs</strong> no <a href="https://script.google.com" target="_blank" style="color:var(--yellow)">Google Apps Script</a>
+          como Web App (Execute as: Me · Who has access: Anyone) e cole a URL aqui.<br>
+          Deixe em branco para usar armazenamento local (localStorage).
+        </small>
+      </div>
+      <div id="settingsStatus" class="lp-settings-status"></div>
+      <div class="lp-settings-row" style="margin-top:16px;">
+        <button class="lp-settings-btn sec" onclick="testarConexao()">Testar conexão</button>
+        <button class="lp-settings-btn" onclick="salvarSettings()">Salvar</button>
+      </div>
     </div>
-    <div style="text-align:right;margin-top:12px;">
+    <!-- ABA: Usuários -->
+    <div class="lp-settings-pane" id="settingsPane_users">
+      <div id="lpUserList" class="lp-user-list"></div>
+      <div class="lp-add-form">
+        <div>
+          <span class="lp-add-label">E-mail</span>
+          <input class="lp-add-input" id="nuEmail" type="email" placeholder="usuario@empresa.com">
+        </div>
+        <div>
+          <span class="lp-add-label">Senha</span>
+          <input class="lp-add-input" id="nuSenha" type="password" placeholder="••••••••">
+        </div>
+        <div class="lp-add-form-full">
+          <span class="lp-add-label">Permissão</span>
+          <select class="lp-add-input" id="nuPerm">
+            <option value="Administrador">Administrador</option>
+            <option value="Usuario" selected>Usuário</option>
+            <option value="Portaria">Portaria</option>
+          </select>
+        </div>
+        <div class="lp-add-form-full">
+          <button class="lp-settings-btn" onclick="addUser()" style="width:100%">+ Adicionar Usuário</button>
+        </div>
+      </div>
+    </div>
+    <!-- ABA: Unidades -->
+    <div class="lp-settings-pane" id="settingsPane_unidades">
+      <div id="lpUnitList" class="lp-user-list"></div>
+      <div class="lp-add-form">
+        <div class="lp-add-form-full">
+          <span class="lp-add-label">Nome da Unidade</span>
+          <input class="lp-add-input" id="nuNome" type="text" placeholder="CD São Paulo">
+        </div>
+        <div>
+          <span class="lp-add-label">Latitude</span>
+          <input class="lp-add-input" id="nuLat" type="text" placeholder="-23.5505">
+        </div>
+        <div>
+          <span class="lp-add-label">Longitude</span>
+          <input class="lp-add-input" id="nuLng" type="text" placeholder="-46.6333">
+        </div>
+        <div class="lp-add-form-full">
+          <button class="lp-settings-btn" onclick="addUnit()" style="width:100%">+ Adicionar Unidade</button>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:16px;">
       <span onclick="hideSettingsModal()" style="font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">Fechar</span>
     </div>
   </div>

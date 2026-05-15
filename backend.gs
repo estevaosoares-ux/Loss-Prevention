@@ -1,19 +1,26 @@
 // ════════════════════════════════════════════════════════════════
 // LOSS PREVENTION — GAS Web App (backend de dados)
+// Hospedagem: MyGrid (grid.adminml.com)
 // ════════════════════════════════════════════════════════════════
 //
 // COMO IMPLANTAR:
 //   1. Acesse script.google.com → Novo projeto
 //   2. Cole este código
-//   3. Altere SPREADSHEET_ID com o ID da sua planilha
-//   4. Ajuste TIPO_SHEET conforme os nomes reais das suas abas
-//   5. Implante → Web App
-//        Execute as: Me
-//        Who has access: Anyone
-//   6. Copie a URL gerada e cole em config.json → "gasWebAppUrl"
+//   3. Altere SPREADSHEET_ID com o ID da sua planilha Google Sheets
+//      (o ID está na URL: docs.google.com/spreadsheets/d/SEU_ID_AQUI/edit)
+//   4. Ajuste TIPO_SHEET conforme os nomes das abas na sua planilha
+//   5. Implante → Web App:
+//        Execute as:       Me
+//        Who has access:   Anyone
+//   6. Copie a URL do Web App gerada
+//   7. No MyGrid: abra o sistema → faça login como Administrador
+//      → clique em ⚙ Configurações → aba "Conexão" → cole a URL → Salvar
 //
-// ID da planilha: está na URL
-//   https://docs.google.com/spreadsheets/d/SEU_ID_AQUI/edit
+// ABAS necessárias na planilha (crie com estes nomes exatos):
+//   SELOS · CRACHAS · INVESTIGACOES · CADEADOS · CARTOES
+//   DISCIPLINAR · RONDAS · BAU · PACOTES · LACRES · ACESSOS · UNIDADES
+//
+// ABA UNIDADES — colunas: NOME | LATLONG (formato: -23.5505,-46.6333)
 // ════════════════════════════════════════════════════════════════
 
 var SPREADSHEET_ID = 'COLE_O_ID_DA_SUA_PLANILHA_AQUI';
